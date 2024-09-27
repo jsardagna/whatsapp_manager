@@ -20,7 +20,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 
 	newmsg := &waE2E.Message{ExtendedTextMessage: msg.ExtendedTextMessage}
 	db := q.worker.db
-	cli := q.worker.cli
+	cli := q.worker.Cli
 	groups, err := q.worker.findAllGroups()
 	if err != nil {
 		log.Printf("Failed to get group list: %v", err)
@@ -57,7 +57,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 
 func (q *MessageQueue) sendAllMessagesVideo(ignore string, data []byte, msg string, kind *[]string, ddd *[]string) {
 	// envia imagem para servidor
-	cli := q.worker.cli
+	cli := q.worker.Cli
 	db := q.worker.db
 	uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaVideo)
 	if err != nil {
@@ -99,13 +99,13 @@ func (q *MessageQueue) SendVideo(group *types.GroupInfo, uploaded whatsmeow.Uplo
 	resp := make(chan whatsmeow.SendResponse)
 	go func() {
 		r, err2 := q.sendMessageVideo(cctx, group.JID, uploaded, data, msg)
-		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.cli.Store.ID.User, msg, err2)
+		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, err2)
 		resp <- r
 	}()
 	select {
 	case <-cctx.Done():
 		fmt.Println(cctx.Err())
-		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.cli.Store.ID.User, msg, cctx.Err())
+		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, cctx.Err())
 	case <-resp:
 		fmt.Println("Enviado", group.Name)
 		time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
@@ -128,7 +128,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	if err != nil {
 		log.Printf("Failed to get group list: %v", err)
 	} else {
-		db.UpdateConfig(w.cli.Store.ID.User, "ENVIO", len(groups))
+		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
 
 			if group.JID.String() == ignore {
@@ -136,7 +136,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				continue
 			}
 
-			exists, err := db.JuidExists(w.cli, group.JID)
+			exists, err := db.JuidExists(w.Cli, group.JID)
 			if err != nil {
 				log.Printf("Failed to QUERY to DB: %v", err)
 			}
@@ -153,7 +153,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {
 	w := q.worker
 	db := w.db
-	cli := w.cli
+	cli := w.Cli
 	valid := kind == nil || db.ValidGroupKind(group.JID, *kind, ddd)
 
 	if valid {
@@ -190,7 +190,7 @@ func (q *MessageQueue) sendMessageVideo(ctx context.Context, recipient types.JID
 		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
-	resp, err = q.worker.cli.SendMessage(ctx, recipient, msg)
+	resp, err = q.worker.Cli.SendMessage(ctx, recipient, msg)
 	if err != nil {
 		logWa.Errorf("Error sending image message: %v", err)
 
@@ -213,7 +213,7 @@ func (q *MessageQueue) sendMessage(ctx context.Context, recipient types.JID, upl
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
 
-	resp, err = q.worker.cli.SendMessage(ctx, recipient, msg)
+	resp, err = q.worker.Cli.SendMessage(ctx, recipient, msg)
 	if err != nil {
 		logWa.Errorf("Error sending image message: %v", err)
 

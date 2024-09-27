@@ -1,6 +1,7 @@
 package whatsapp
 
 import (
+	"fmt"
 	"os"
 	"sync"
 	"whatsapp-manager/internal/database"
@@ -12,8 +13,8 @@ import (
 )
 
 type WhatsAppManager struct {
-	workers map[string]*WhatsAppWorker
-	mu      sync.Mutex
+	divulgadores map[string]*DivulgacaoWorker
+	mu           sync.Mutex
 }
 
 var logWa waLog.Logger
@@ -21,7 +22,7 @@ var logLevel = "ERROR"
 
 func NewWhatsAppManager() *WhatsAppManager {
 	return &WhatsAppManager{
-		workers: make(map[string]*WhatsAppWorker),
+		divulgadores: make(map[string]*DivulgacaoWorker),
 	}
 
 }
@@ -30,17 +31,18 @@ func (m *WhatsAppManager) StartWorker(device *store.Device, cmdGroupJUID string,
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	worker := NewWhatsAppWorker(device, cmdGroupJUID, db)
-	m.workers[device.ID.User] = worker
+	worker := NewDivulgacaoWorker(device, cmdGroupJUID, db)
+	m.divulgadores[device.ID.User] = worker
 	go worker.Start()
 }
 
 func (m *WhatsAppManager) StartManagingDevices(cmdGroupJUID string, db database.Database) error {
-
+	fmt.Println("Inicializando devices")
 	logWa = waLog.Stdout("Main", logLevel, false)
 
-	// Buscar todos os dispositivos do banco de dados
 	devices, err := m.getAllDevices()
+	fmt.Println("Devices Ativos: ", len(devices))
+
 	if err != nil {
 		return err
 	}
@@ -53,14 +55,12 @@ func (m *WhatsAppManager) StartManagingDevices(cmdGroupJUID string, db database.
 }
 
 func (m *WhatsAppManager) getAllDevices() ([]*store.Device, error) {
-	// Definindo propriedades do dispositivo
-	// Conectar ao banco de dados usando as variáveis de ambiente DIALECT_W e ADDRESS_W
+
 	storeContainer, err := m.initializeStore()
 	if err != nil {
 		return nil, err
 	}
 
-	// Buscar todos os dispositivos do banco de dados
 	devices, err := storeContainer.GetAllDevices()
 	if err != nil {
 		logWa.Errorf("Erro ao obter dispositivos: %v", err)

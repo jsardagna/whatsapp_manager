@@ -15,7 +15,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
-func (w *WhatsAppWorker) monitorInsert(juid string) {
+func (w *DivulgacaoWorker) monitorInsert(juid string) {
 	for {
 		// Verifica se o campo "inserir" está true
 		if w.db.IsInsertEnabled(juid) {
@@ -27,7 +27,7 @@ func (w *WhatsAppWorker) monitorInsert(juid string) {
 	}
 }
 
-func (w *WhatsAppWorker) acceptGroup(url string) string {
+func (w *DivulgacaoWorker) acceptGroup(url string) string {
 	re := regexp.MustCompile(`https://chat.whatsapp.com/([\S]+)`)
 	matches := re.FindStringSubmatch(url)
 	if len(matches) > 1 {
@@ -36,14 +36,14 @@ func (w *WhatsAppWorker) acceptGroup(url string) string {
 	return ""
 }
 
-func (w *WhatsAppWorker) joininvitelink(link string) (types.JID, error) {
+func (w *DivulgacaoWorker) joininvitelink(link string) (types.JID, error) {
 
 	if w.acceptGroup(link) == "" {
 		logWa.Errorf("Link Invalido: %s, deve começar com https://chat.whatsapp.com/[####]", link)
 		return types.EmptyJID, whatsmeow.ErrIQNotFound
 	}
 
-	groupID, err := w.cli.JoinGroupWithLink(link)
+	groupID, err := w.Cli.JoinGroupWithLink(link)
 	if err != nil {
 		logWa.Errorf("Failed to join group via invite link: %v", err)
 	} else {
@@ -52,15 +52,15 @@ func (w *WhatsAppWorker) joininvitelink(link string) (types.JID, error) {
 	return groupID, err
 }
 
-func (w *WhatsAppWorker) insertNewGroups() {
+func (w *DivulgacaoWorker) insertNewGroups() {
 
 	groups, _ := w.findAllGroups()
 	totalGrupos := len(groups)
-	println("Conta", w.cli.Store.ID.String())
+	println("Conta", w.Cli.Store.ID.String())
 	println("Total de grupos", totalGrupos)
 	len := len(groups)
 	if len > 300 {
-		w.db.UpdateConfig(w.cli.Store.ID.User, "Acima de 300", len)
+		w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", len)
 		return
 	}
 	log.Println("Inserindo")
@@ -105,7 +105,7 @@ func (w *WhatsAppWorker) insertNewGroups() {
 				log.Printf("erro ao atualizar grupo erro: %v", err)
 			}
 			if group.Classify != nil {
-				potho, err3 := w.cli.GetProfilePictureInfo(gr, nil)
+				potho, err3 := w.Cli.GetProfilePictureInfo(gr, nil)
 				if err3 == nil {
 					group.Photo = &potho.URL
 				}
@@ -113,7 +113,7 @@ func (w *WhatsAppWorker) insertNewGroups() {
 				group.LastJID = gr.String()
 				//social.sendGroup(group)
 			}
-			w.db.UpdateConfig(w.cli.Store.ID.User, "", len+total)
+			w.db.UpdateConfig(w.Cli.Store.ID.User, "", len+total)
 			err = tx.Commit()
 			if err == nil {
 				time.Sleep(time.Duration(MapExponential(totalGrupos)+rand.Intn(5)) * time.Second)
@@ -131,7 +131,7 @@ func (w *WhatsAppWorker) insertNewGroups() {
 			tx.Rollback()
 			break
 		} else if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("rate-overlimit")) {
-			w.db.UpdateConfig(w.cli.Store.ID.User, "rate-overlimit", len)
+			w.db.UpdateConfig(w.Cli.Store.ID.User, "rate-overlimit", len)
 			err = nil
 			tx.Rollback()
 			break
@@ -165,12 +165,12 @@ func MapExponential(x int) int {
 	return int(math.Round(result)) // Convert the result to an integer by rounding
 }
 
-func (w *WhatsAppWorker) GetActiveGroups() {
+func (w *DivulgacaoWorker) GetActiveGroups() {
 
 	groups, _ := w.findAllGroups()
 	println("Atualizando Grupos por telefone...removendo duplicados..")
 	for _, group := range groups {
 		println(group, group.Name)
-		w.db.InsertGroupFone(w.cli, group, "", len(group.Participants))
+		w.db.InsertGroupFone(w.Cli, group, "", len(group.Participants))
 	}
 }

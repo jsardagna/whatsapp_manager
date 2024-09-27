@@ -12,7 +12,7 @@ var queueAll *MessageQueue
 
 // MessageQueue representa a fila de mensagens
 type MessageQueue struct {
-	worker    *WhatsAppWorker
+	worker    *DivulgacaoWorker
 	stack     []messageRequest
 	intervalo time.Duration
 }
@@ -30,7 +30,7 @@ type messageRequest struct {
 }
 
 // NewMessageQueue inicializa uma nova fila de mensagens
-func (w *WhatsAppWorker) NewMessageQueue(intervalo time.Duration) *MessageQueue {
+func (w *DivulgacaoWorker) NewMessageQueue(intervalo time.Duration) *MessageQueue {
 	return &MessageQueue{
 		stack:     make([]messageRequest, 0),
 		intervalo: intervalo,
@@ -54,7 +54,7 @@ func (q *MessageQueue) EnqueueLink(db database.Database, ignore string, msg *waE
 }
 
 // processStack processa a pilha de mensagens
-func (w *WhatsAppWorker) processStack(queue *MessageQueue) {
+func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 	for {
 		if len(queue.stack) > 0 {
 			request := queue.stack[0]
@@ -72,12 +72,4 @@ func (w *WhatsAppWorker) processStack(queue *MessageQueue) {
 			time.Sleep(time.Duration(10 * time.Second))
 		}
 	}
-}
-
-func (w *WhatsAppWorker) inicializaFila() {
-	queueN = w.NewMessageQueue(1)
-	queueAll = w.NewMessageQueue(1)
-	go w.processStack(queueN)
-	go w.processStack(queueAll)
-
 }

@@ -2,98 +2,64 @@ package whatsapp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
-	"sync/atomic"
-	"time"
 	"whatsapp-manager/internal/database"
 
-	qrterminal "github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
-	waLog "go.mau.fi/whatsmeow/util/log"
 	proto "google.golang.org/protobuf/proto"
 )
 
-var isWaitingForPair atomic.Bool
-
-type WhatsAppWorker struct {
-	device       *store.Device
-	cli          *whatsmeow.Client
+type DivulgacaoWorker struct {
+	*BaseWhatsAppWorker
 	cmdGroupJUID string
-	db           database.Database
 	nextmessage  bool
 	kindmessage  string
 }
 
-func NewWhatsAppWorker(device *store.Device, cmdGroupJUID string, db database.Database) *WhatsAppWorker {
-	return &WhatsAppWorker{device: device, cmdGroupJUID: cmdGroupJUID, db: db}
+func NewDivulgacaoWorker(device *store.Device, cmdGroupJUID string, db database.Database) *DivulgacaoWorker {
+	baseWorker := NewBaseWhatsAppWorker(device, db)
+	return &DivulgacaoWorker{BaseWhatsAppWorker: baseWorker, cmdGroupJUID: cmdGroupJUID}
 }
 
-func (w *WhatsAppWorker) Start() error {
-	var pairRejectChan = make(chan bool, 1)
-	w.cli = whatsmeow.NewClient(w.device, waLog.Stdout("Cliente", logLevel, true))
+func (w *DivulgacaoWorker) Start() error {
 
-	w.cli.PrePairCallback = func(jid types.JID, platform, businessName string) bool {
-		isWaitingForPair.Store(true)
-		defer isWaitingForPair.Store(false)
-		logWa.Infof("Pairing %s (platform: %q, business name: %q). Type r within 3 seconds to reject pair", jid, platform, businessName)
-		select {
-		case reject := <-pairRejectChan:
-			if reject {
-				logWa.Infof("Rejecting pair")
-				return false
-			}
-		case <-time.After(3 * time.Second):
-		}
-		logWa.Infof("Accepting pair")
-		return true
-	}
+	return w.workerDivulgacao()
+}
 
-	// Verificar se precisa de QR Code
-	ch, err := w.cli.GetQRChannel(context.Background())
-	if err != nil && !errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
-		return err
-	} else {
-		go func() {
-			for evt := range ch {
-				if evt.Event == "code" {
-					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-				}
-			}
-		}()
-	}
-
-	err = w.cli.Connect()
-	if err != nil {
-		return err
-	}
-
-	if w.cli.Store != nil && w.cli.Store.ID != nil {
+func (w *DivulgacaoWorker) workerDivulgacao() error {
+	if w.Cli.Store != nil && w.Cli.Store.ID != nil {
 		go w.inicializaFila()
-		w.cli.AddEventHandler(w.handleWhatsAppEvents)
+		w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 		groups, _ := w.findAllGroups()
-		println("Conta", w.cli.Store.ID.String())
+		println("Conta", w.Cli.Store.ID.String())
 		println("Total de grupos", len(groups))
-		go w.monitorInsert(w.cli.Store.ID.User)
+		go w.monitorInsert(w.Cli.Store.ID.User)
 	}
 
 	log.Printf("Dispositivo %s conectado com sucesso", w.device.ID)
 	return nil
 }
 
-func (w *WhatsAppWorker) findAllGroups() ([]*types.GroupInfo, error) {
-	return w.cli.GetJoinedGroups()
+func (w *DivulgacaoWorker) inicializaFila() {
+	queueN = w.NewMessageQueue(1)
+	queueAll = w.NewMessageQueue(1)
+	go w.processStack(queueN)
+	go w.processStack(queueAll)
+
 }
 
-func (w *WhatsAppWorker) handleWhatsAppEvents(rawEvt interface{}) {
+func (w *DivulgacaoWorker) findAllGroups() ([]*types.GroupInfo, error) {
+	return w.Cli.GetJoinedGroups()
+}
+
+func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 	db := w.db
 	switch evt := rawEvt.(type) {
 	case *events.Message:
@@ -133,7 +99,7 @@ func (w *WhatsAppWorker) handleWhatsAppEvents(rawEvt interface{}) {
 				logWa.Infof("Comando %s from %s (%s): %+v", evt.Info.ID, evt.Info.SourceString(), strings.Join(metaParts, ", "), evt.Message)
 				if w.nextmessage && evt.Message.ImageMessage != nil {
 					img := evt.Message.GetImageMessage()
-					data, err := w.cli.Download(img)
+					data, err := w.Cli.Download(img)
 					if err != nil {
 						logWa.Errorf("Failed to download image: %v", err)
 						return
@@ -151,7 +117,7 @@ func (w *WhatsAppWorker) handleWhatsAppEvents(rawEvt interface{}) {
 					w.nextmessage = false
 				} else if w.nextmessage && evt.Message.VideoMessage != nil {
 					video := evt.Message.GetVideoMessage()
-					data, err := w.cli.Download(video)
+					data, err := w.Cli.Download(video)
 					if err != nil {
 						logWa.Errorf("Failed to download video: %v", err)
 						return
@@ -249,16 +215,16 @@ func (w *WhatsAppWorker) handleWhatsAppEvents(rawEvt interface{}) {
 	}
 }
 
-func (w *WhatsAppWorker) enviarTexto(cmd string, total int, evt *events.Message) {
+func (w *DivulgacaoWorker) enviarTexto(cmd string, total int, evt *events.Message) {
 	msg := &waE2E.Message{Conversation: proto.String(fmt.Sprintf("Aguardando MSG, Fila: %s na espera: %d", cmd, total))}
-	w.cli.SendMessage(context.Background(), evt.Info.Chat, msg)
+	w.Cli.SendMessage(context.Background(), evt.Info.Chat, msg)
 }
 
-func (w *WhatsAppWorker) uploadImage(data []byte) (whatsmeow.UploadResponse, error) {
-	return w.cli.Upload(context.Background(), data, whatsmeow.MediaImage)
+func (w *DivulgacaoWorker) uploadImage(data []byte) (whatsmeow.UploadResponse, error) {
+	return w.Cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 }
 
-func (w *WhatsAppWorker) verifyAndInsertGroupTelegram(msg string, evt *events.Message) {
+func (w *DivulgacaoWorker) verifyAndInsertGroupTelegram(msg string, evt *events.Message) {
 	codes := findWhatsAppCodes("https://t.me/", msg)
 
 	for _, code := range codes {
@@ -281,7 +247,7 @@ func (w *WhatsAppWorker) verifyAndInsertGroupTelegram(msg string, evt *events.Me
 	}
 }
 
-func (w *WhatsAppWorker) verifyAndInsertGroup(msg string, evt *events.Message) {
+func (w *DivulgacaoWorker) verifyAndInsertGroup(msg string, evt *events.Message) {
 	codes := findWhatsAppCodes("https://chat.whatsapp.com/", msg)
 
 	for _, code := range codes {
@@ -300,7 +266,7 @@ func (w *WhatsAppWorker) verifyAndInsertGroup(msg string, evt *events.Message) {
 				g.Description = *evt.Message.ExtendedTextMessage.Description
 			}
 		} else {
-			resp, err := w.cli.GetGroupInfoFromLink(msg)
+			resp, err := w.Cli.GetGroupInfoFromLink(msg)
 			if err == nil {
 				g.Name = resp.Name
 				g.Description = resp.Topic
@@ -331,9 +297,9 @@ func findWhatsAppCodes(pattern, texto string) []string {
 	return codigos
 }
 
-func (w *WhatsAppWorker) queryInveteLink(g database.Group) bool {
+func (w *DivulgacaoWorker) queryInveteLink(g database.Group) bool {
 
-	resp, err := w.cli.GetGroupInfoFromLink(g.Link)
+	resp, err := w.Cli.GetGroupInfoFromLink(g.Link)
 
 	if err != nil {
 		w.db.InvalidGroup(g)
