@@ -171,7 +171,7 @@ func (d *Database) IsInsertEnabled(juid string) bool {
 	err := d.Conn.QueryRow(`
 		SELECT COALESCE(inserir, false) FROM config WHERE juid = $1;
 	`, juid).Scan(&inserir)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "no rows in result set") {
 		log.Printf("falha ao verificar campo inserir: %v", err)
 		return false
 	}
@@ -219,11 +219,28 @@ func (d *Database) InsertLink(text, jid string) error {
 }
 
 func (d *Database) InsertConfig(juid string, cmdGroupJUID string) error {
-	_, err := d.Conn.Exec("INSERT INTO config (uuid, juid, cmd_group_juid) VALUES ($1, $2, $3)", uuid.New(), juid, cmdGroupJUID)
+	// Verificar se o juid já existe na tabela config
+	var exists bool
+	err := d.Conn.QueryRow("SELECT EXISTS(SELECT 1 FROM config WHERE juid = $1)", juid).Scan(&exists)
 	if err != nil {
-		log.Printf("falha ao veriricar grupo: %v", err)
+		log.Printf("Erro ao verificar a existência do juid: %v", err)
 		return err
 	}
+
+	// Se o juid já existir, retornar sem inserir
+	if exists {
+
+		return nil
+	}
+
+	// Inserir o juid com active e insert configurados como true
+	_, err = d.Conn.Exec("INSERT INTO config (uuid, juid, cmd_group_juid, server, active, inserir) VALUES ($1, $2, $3, true, true, true)", uuid.New(), juid, cmdGroupJUID)
+	if err != nil {
+		log.Printf("Falha ao inserir na tabela config: %v", err)
+		return err
+	}
+
+	log.Printf("JUID %s inserido com sucesso.", juid)
 	return nil
 }
 
@@ -378,7 +395,8 @@ func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
 	rows, err := d.Conn.Query(`
 		SELECT juid, last_update, total_grupos
 		FROM config
-		WHERE active = true
+		WHERE active = true 
+		 and server = true
 		ORDER BY last_update DESC
 	`)
 

@@ -3,14 +3,11 @@ package whatsapp
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
-	"time"
 	"whatsapp-manager/internal/database"
 
-	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
@@ -21,20 +18,18 @@ import (
 type ComandoWorker struct {
 	*BaseWhatsAppWorker
 	cmdGroupJUID string
-	m            *WhatsAppManager
 }
 
 func NewComandoWorker(m *WhatsAppManager, device *store.Device, cmdGroupJUID string, db database.Database) *ComandoWorker {
-	baseWorker := NewBaseWhatsAppWorker(device, db)
-	return &ComandoWorker{BaseWhatsAppWorker: baseWorker, cmdGroupJUID: cmdGroupJUID, m: m}
+	baseWorker := NewBaseWhatsAppWorker(m, device, db)
+	return &ComandoWorker{BaseWhatsAppWorker: baseWorker, cmdGroupJUID: cmdGroupJUID}
 }
 
 func (w *ComandoWorker) Start() error {
-	err := w.Connect(nil)
-	if err != nil {
-		return err
+	onComplete := func() {
+		w.inicializaCommando()
 	}
-	return w.inicializaCommando()
+	return w.Connect(nil, onComplete)
 }
 
 func (w *ComandoWorker) inicializaCommando() error {
@@ -42,7 +37,17 @@ func (w *ComandoWorker) inicializaCommando() error {
 		w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	}
 
-	log.Printf("Dispositivo %s conectado com sucesso", w.device.ID)
+	log.Printf("Dispositivo %s conectado com sucesso!", w.device.ID)
+	/*
+		grupos, _ := w.Cli.GetJoinedGroups()
+
+		// Percorrendo a lista de grupos usando o loop for-range
+		for _, grupo := range grupos {
+			// Aqui você pode processar cada grupo individualmente
+			fmt.Printf("grupo.JID: %v\n", grupo.JID)
+			fmt.Printf("grupo.Name: %v\n", grupo.Name)
+		}
+	*/
 	return nil
 }
 
@@ -59,13 +64,13 @@ func (w *ComandoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 					} else {
 						cmd = *evt.Message.Conversation
 					}
-					if strings.Contains(cmd, "LIST") {
+					if strings.Contains(strings.ToLower(cmd), "list") {
 						w.enviarTexto(w.m.ListarDivulgadoresAtivos(), evt)
 					}
-					if strings.Contains(cmd, "OFF") {
+					if strings.Contains(strings.ToLower(cmd), "off") {
 						w.enviarTexto(w.m.ListarDivulgadoresInativos(), evt)
 					}
-					if strings.Contains(cmd, "ADD") {
+					if strings.Contains(strings.ToLower(cmd), "add") {
 						qrcod, err := w.m.AddnewDevice()
 						if err != nil {
 							w.enviarTexto(err.Error(), evt)
@@ -73,7 +78,7 @@ func (w *ComandoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 							w.sendImage(evt.Info.Chat, qrcod)
 						}
 					}
-					if strings.Contains(cmd, "R-") {
+					if strings.Contains(strings.ToLower(cmd), "r-") {
 						juid, err := ExtrairNumero(cmd)
 						if err == nil {
 							w.m.db.RemoveDevice(juid)
@@ -91,17 +96,7 @@ func (w *ComandoWorker) sendImage(recipient types.JID, data []byte) {
 		log.Printf("Failed to upload file: %v", err)
 		return
 	}
-	cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	resp := make(chan whatsmeow.SendResponse)
-	go func() {
-		r, _ := w.sendMessage(cctx, recipient, uploaded, data, "")
-		resp <- r
-	}()
-	select {
-	case <-cctx.Done():
-		fmt.Println(cctx.Err())
-	case <-resp:
-	}
+	w.sendMessage(context.Background(), recipient, uploaded, data, "")
 }
 
 func (w *ComandoWorker) enviarTexto(message string, evt *events.Message) {

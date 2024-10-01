@@ -21,6 +21,8 @@ type WhatsAppManager struct {
 	storeContainer *sqlstore.Container
 	cmdGroupJUID   string
 	db             database.Database
+	grupoComando   string
+	deviceComando  string
 }
 
 var logWa waLog.Logger
@@ -35,11 +37,16 @@ func NewWhatsAppManager(cmdGroupJUID string, db database.Database) *WhatsAppMana
 }
 
 func (m *WhatsAppManager) StartComando(grupoComando string, deviceComando string) error {
+	m.grupoComando = grupoComando
+	m.deviceComando = deviceComando
 	device, err := m.storeContainer.GetDevice(parseJID(deviceComando))
 	if err != nil {
 		return err
+	} else if device == nil {
+		device = m.storeContainer.NewDevice()
 	}
-	NewComandoWorker(m, device, grupoComando, m.db)
+	c := NewComandoWorker(m, device, grupoComando, m.db)
+	go c.Start()
 	return nil
 }
 
@@ -47,25 +54,36 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	worker := NewDivulgacaoWorker(device, m.cmdGroupJUID, m.db)
-	go worker.Start(qrCodeChan)
-	m.divulgadores[device.ID.User] = worker
+	worker := NewDivulgacaoWorker(m, device, m.cmdGroupJUID, m.db)
+
+	go func() {
+		/*
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("Recuperado de um panic: %v\n", r)
+				}
+			}()
+		*/
+
+		worker.Start(qrCodeChan)
+	}()
 }
 
 func (m *WhatsAppManager) StartAllDevices() error {
 
 	fmt.Println("Inicializando devices")
-	logWa = waLog.Stdout("Main", logLevel, false)
+	logWa = waLog.Stdout("Main", logLevel, true)
 
 	devices, err := m.getAllDevices()
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("Devices Ativos: ", len(devices))
 	for _, device := range devices {
 		go func(device *store.Device) {
-			m.startWorker(device, nil)
+			if !strings.Contains(device.ID.String(), m.deviceComando) {
+				m.startWorker(device, nil)
+			}
 		}(device)
 	}
 	return nil
@@ -86,9 +104,9 @@ func (m *WhatsAppManager) AddnewDevice() ([]byte, error) {
 			// Caso o QR code esteja vazio
 			return nil, fmt.Errorf("QR Code vazio recebido")
 		}
-	case <-time.After(20 * time.Second): // Timeout opcional de 10 segundos
+	case <-time.After(5 * time.Second): // Timeout opcional de 10 segundos
 		// Timeout para evitar que o código fique preso indefinidamente
-		return nil, fmt.Errorf("Timeout: QR Code não foi recebido a tempo")
+		return nil, fmt.Errorf("timeout: Qr code não foi recebido a tempo")
 	}
 }
 
@@ -103,10 +121,10 @@ func (m *WhatsAppManager) getAllDevices() ([]*store.Device, error) {
 }
 
 func (m *WhatsAppManager) InitializeStore() error {
-	logLevel := "ERROR"
+	logLevel := "INFO"
 	store.DeviceProps.Os = proto.String("Google Chrome")
 	store.DeviceProps.RequireFullSync = proto.Bool(false)
-	dbLog := waLog.Stdout("Database", logLevel, false)
+	dbLog := waLog.Stdout("Database", logLevel, true)
 	var err error
 	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), dbLog)
 	if err != nil {
@@ -134,8 +152,8 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 
 		// Se o divulgador não existir, ele está inativo
 		if !exists {
-			inativosString += fmt.Sprintf("Divulgador Inativo: %s, Último Update: %s, Total de Grupos: %d\n",
-				activeDevice.JUID, activeDevice.LastUpdate.Format("2006-01-02 15:04:05"), activeDevice.TotalGrupos)
+			inativosString += fmt.Sprintf("%s \n",
+				activeDevice.JUID)
 			continue
 		}
 

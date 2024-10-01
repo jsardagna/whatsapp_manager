@@ -23,34 +23,37 @@ type DivulgacaoWorker struct {
 	Connected    bool
 }
 
-func NewDivulgacaoWorker(device *store.Device, cmdGroupJUID string, db database.Database) *DivulgacaoWorker {
-	baseWorker := NewBaseWhatsAppWorker(device, db)
+func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, cmdGroupJUID string, db database.Database) *DivulgacaoWorker {
+	baseWorker := NewBaseWhatsAppWorker(m, device, db)
 	return &DivulgacaoWorker{BaseWhatsAppWorker: baseWorker, cmdGroupJUID: cmdGroupJUID}
 }
 
 func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
-	err := w.Connect(qrCodeChan)
-	if err == nil {
-		err = w.workerDivulgacao()
+	onComplete := func() {
+		w.workerDivulgacao()
 	}
-	if err != nil {
-		w.Connected = false
-	} else {
-		w.Connected = true
-	}
+	w.Connect(qrCodeChan, onComplete)
+
 }
 
 func (w *DivulgacaoWorker) workerDivulgacao() error {
-	if w.Cli.Store != nil && w.Cli.Store.ID != nil {
-		go w.inicializaFila()
-		w.Cli.AddEventHandler(w.handleWhatsAppEvents)
-		groups, _ := w.findAllGroups()
-		println("Conta", w.Cli.Store.ID.String())
-		println("Total de grupos", len(groups))
-		go w.monitorInsert(w.Cli.Store.ID.User)
+
+	go w.inicializaFila()
+	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
+	groups, _ := w.findAllGroups()
+	println("CELULAR:", w.Cli.Store.ID.User, " GRUPOS:", len(groups))
+	go w.monitorInsert(w.Cli.Store.ID.User)
+	w.m.divulgadores[w.device.ID.User] = w
+
+	_, err := w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8")
+	if err == nil {
+		w.db.InsertConfig(w.Cli.Store.ID.User, w.cmdGroupJUID)
+	} else {
+		log.Println(err)
 	}
 
-	log.Printf("Dispositivo %s conectado com sucesso", w.device.ID)
+	w.Connected = true
+
 	return nil
 }
 

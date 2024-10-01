@@ -24,13 +24,14 @@ type BaseWhatsAppWorker struct {
 	device *store.Device
 	Cli    *whatsmeow.Client
 	db     database.Database
+	m      *WhatsAppManager
 }
 
-func NewBaseWhatsAppWorker(device *store.Device, db database.Database) *BaseWhatsAppWorker {
-	return &BaseWhatsAppWorker{device: device, db: db}
+func NewBaseWhatsAppWorker(m *WhatsAppManager, device *store.Device, db database.Database) *BaseWhatsAppWorker {
+	return &BaseWhatsAppWorker{m: m, device: device, db: db}
 }
 
-func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte) error {
+func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte, onComplete func()) error {
 	var isWaitingForPair atomic.Bool
 	var pairRejectChan = make(chan bool, 1)
 	w.Cli = whatsmeow.NewClient(w.device, waLog.Stdout("Cliente", logLevel, true))
@@ -52,30 +53,41 @@ func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte) error {
 	}
 
 	// Verificar se precisa de QR Code
-	ch, err := w.Cli.GetQRChannel(context.Background())
-	if err != nil && !errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
-		return err
-	} else {
-		go func() {
-			for evt := range ch {
-				if evt.Event == "code" {
-					if qrCodeChan != nil {
-						qrCodeChan <- w.GerarQRCodeEmBytes(evt.Code)
+	if w.Cli.Store.ID == nil {
+		ch, err := w.Cli.GetQRChannel(context.Background())
+		if err != nil && !errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
+			return err
+		} else {
+			go func() {
+				for evt := range ch {
+					if evt.Event == "code" {
+						if qrCodeChan != nil {
+							qrCodeChan <- w.GerarQRCodeEmBytes(evt.Code)
+						} else {
+							qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+						}
+
 					} else {
-						qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+						// Aqui chama o método passado por parâmetro quando o QR code não é necessário
+						if onComplete != nil {
+							onComplete()
+						}
 					}
-
 				}
-			}
-		}()
-	}
-
-	err = w.Cli.Connect()
-	if err != nil {
-		fmt.Println("Falha ao conectar Device: ", w.device.ID.User)
-		return err
+			}()
+		}
+		w.Cli.Connect()
 	} else {
-		fmt.Println("Device Connectado: ", w.device.ID.User)
+		fmt.Println("Conenctando: ", w.Cli.Store.ID.User)
+		err := w.Cli.Connect()
+		if err != nil {
+			fmt.Println("Falha ao conectar Device: ", w.device.ID.User)
+			return err
+		} else if w.device != nil && w.device.ID != nil {
+			if onComplete != nil {
+				onComplete()
+			}
+		}
 	}
 	return nil
 }
