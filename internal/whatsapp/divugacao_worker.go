@@ -8,7 +8,6 @@ import (
 	"strings"
 	"whatsapp-manager/internal/database"
 
-	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
@@ -21,6 +20,7 @@ type DivulgacaoWorker struct {
 	cmdGroupJUID string
 	nextmessage  bool
 	kindmessage  string
+	Connected    bool
 }
 
 func NewDivulgacaoWorker(device *store.Device, cmdGroupJUID string, db database.Database) *DivulgacaoWorker {
@@ -28,9 +28,16 @@ func NewDivulgacaoWorker(device *store.Device, cmdGroupJUID string, db database.
 	return &DivulgacaoWorker{BaseWhatsAppWorker: baseWorker, cmdGroupJUID: cmdGroupJUID}
 }
 
-func (w *DivulgacaoWorker) Start() error {
-
-	return w.workerDivulgacao()
+func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
+	err := w.Connect(qrCodeChan)
+	if err == nil {
+		err = w.workerDivulgacao()
+	}
+	if err != nil {
+		w.Connected = false
+	} else {
+		w.Connected = true
+	}
 }
 
 func (w *DivulgacaoWorker) workerDivulgacao() error {
@@ -218,10 +225,6 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 func (w *DivulgacaoWorker) enviarTexto(cmd string, total int, evt *events.Message) {
 	msg := &waE2E.Message{Conversation: proto.String(fmt.Sprintf("Aguardando MSG, Fila: %s na espera: %d", cmd, total))}
 	w.Cli.SendMessage(context.Background(), evt.Info.Chat, msg)
-}
-
-func (w *DivulgacaoWorker) uploadImage(data []byte) (whatsmeow.UploadResponse, error) {
-	return w.Cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 }
 
 func (w *DivulgacaoWorker) verifyAndInsertGroupTelegram(msg string, evt *events.Message) {

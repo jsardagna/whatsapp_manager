@@ -11,7 +11,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var cmdGroupJUID string
+var comandos string
+var divulgador string
 
 func init() {
 
@@ -30,21 +31,35 @@ func main() {
 	}
 	defer statusDB.CloneConnection()
 
-	cmdGroupJUID = config.GetEnv("DIVULGACACAO", cmdGroupJUID)
+	divulgador = config.GetEnv("DIVULGACACAO", divulgador)
 
-	// Configuração da API REST
-	http.HandleFunc("/status", rest.StatusHandler)
+	grupoComando := config.GetEnv("COMANDOS", divulgador)
+
+	deviceComando := config.GetEnv("DEVICE_COMMANDO", divulgador)
 
 	// Inicializar gerenciador de WhatsApp
-	manager := whatsapp.NewWhatsAppManager()
+	manager := whatsapp.NewWhatsAppManager(divulgador, *statusDB)
+
+	err = manager.InitializeStore()
+	if err != nil {
+		log.Fatalf("Erro ao inicializar Banco: %v", err)
+	}
+
+	manager.StartComando(grupoComando, deviceComando)
+	if err != nil {
+		log.Fatalf("Erro ao Iniclicar comandos: %v", err)
+	}
 
 	// Iniciar o gerenciamento de dispositivos
-	err = manager.StartManagingDevices(cmdGroupJUID, *statusDB)
+	err = manager.StartAllDevices()
 	if err != nil {
-		log.Fatalf("Erro ao gerenciar dispositivos: %v", err)
+		log.Fatalf("Erro ao conectar divulgadores: %v", err)
 	}
 
 	// Inicializar o servidor
+	// Configuração da API REST
+	http.HandleFunc("/status", rest.StatusHandler)
+
 	//log.Println("Servidor iniciado na porta 8080")
 	//log.Fatal(http.ListenAndServe(":8080", nil))
 

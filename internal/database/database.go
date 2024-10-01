@@ -341,6 +341,68 @@ func (d *Database) InsertMessage(message Message) error {
 	return nil
 }
 
+type DeviceInfo struct {
+	JUID        string
+	LastUpdate  time.Time
+	TotalGrupos int
+}
+
+func (d *Database) RemoveDevice(juid string) error {
+	// Verificar se o JUID está vazio
+	if juid == "" {
+		return errors.New("JUID não pode estar vazio")
+	}
+
+	// Preparar o comando SQL para desativar o dispositivo
+	query := `UPDATE config SET active = false WHERE juid = $1`
+
+	// Executar o comando de update no banco de dados
+	result, err := d.Conn.Exec(query, juid)
+	if err != nil {
+		return fmt.Errorf("erro ao desativar o dispositivo com JUID %s: %w", juid, err)
+	}
+
+	// Verificar se algum registro foi atualizado
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("erro ao verificar linhas afetadas: %w", err)
+	}
+	if rowsAffected == 0 {
+		return errors.New("nenhum dispositivo foi encontrado com o JUID fornecido")
+	}
+
+	return nil
+}
+
+func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
+	rows, err := d.Conn.Query(`
+		SELECT juid, last_update, total_grupos
+		FROM config
+		WHERE active = true
+		ORDER BY last_update DESC
+	`)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var devicesInfo []DeviceInfo
+	for rows.Next() {
+		var deviceInfo DeviceInfo
+		if err := rows.Scan(&deviceInfo.JUID, &deviceInfo.LastUpdate, &deviceInfo.TotalGrupos); err != nil {
+			return nil, err
+		}
+		devicesInfo = append(devicesInfo, deviceInfo)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return devicesInfo, nil
+}
+
 func (d *Database) GetNewLinks() ([]Group, error) {
 	rows, err := d.Conn.Query(`
 	SELECT uuid, link, name, classify, last_topic, date, created

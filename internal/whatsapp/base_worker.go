@@ -4,16 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"sync/atomic"
 	"time"
 	"whatsapp-manager/internal/database"
 
 	qrterminal "github.com/mdp/qrterminal/v3"
+	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
+	proto "google.golang.org/protobuf/proto"
 )
 
 type BaseWhatsAppWorker struct {
@@ -26,7 +30,7 @@ func NewBaseWhatsAppWorker(device *store.Device, db database.Database) *BaseWhat
 	return &BaseWhatsAppWorker{device: device, db: db}
 }
 
-func (w *BaseWhatsAppWorker) Connect() error {
+func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte) error {
 	var isWaitingForPair atomic.Bool
 	var pairRejectChan = make(chan bool, 1)
 	w.Cli = whatsmeow.NewClient(w.device, waLog.Stdout("Cliente", logLevel, true))
@@ -55,7 +59,12 @@ func (w *BaseWhatsAppWorker) Connect() error {
 		go func() {
 			for evt := range ch {
 				if evt.Event == "code" {
-					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+					if qrCodeChan != nil {
+						qrCodeChan <- w.GerarQRCodeEmBytes(evt.Code)
+					} else {
+						qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+					}
+
 				}
 			}
 		}()
@@ -69,4 +78,41 @@ func (w *BaseWhatsAppWorker) Connect() error {
 		fmt.Println("Device Connectado: ", w.device.ID.User)
 	}
 	return nil
+}
+
+func (w *BaseWhatsAppWorker) uploadImage(data []byte) (whatsmeow.UploadResponse, error) {
+	return w.Cli.Upload(context.Background(), data, whatsmeow.MediaImage)
+}
+
+func (w *BaseWhatsAppWorker) GerarQRCodeEmBytes(conteudo string) []byte {
+	// Gerar o QR code em formato PNG e retornar como []byte
+	qrCode, err := qrcode.Encode(conteudo, qrcode.Medium, 256)
+	if err != nil {
+		return nil
+	}
+
+	return qrCode
+}
+
+func (b *BaseWhatsAppWorker) sendMessage(ctx context.Context, recipient types.JID, uploaded whatsmeow.UploadResponse, data []byte, caption string) (resp whatsmeow.SendResponse, err error) {
+
+	msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
+		Caption:       proto.String(caption),
+		URL:           proto.String(uploaded.URL),
+		DirectPath:    proto.String(uploaded.DirectPath),
+		MediaKey:      uploaded.MediaKey,
+		Mimetype:      proto.String(http.DetectContentType(data)),
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+	}}
+
+	resp, err = b.Cli.SendMessage(ctx, recipient, msg)
+	if err != nil {
+		logWa.Errorf("Error sending image message: %v", err)
+
+	} else {
+		logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
+	}
+	return resp, err
 }

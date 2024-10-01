@@ -162,7 +162,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
-			r, err2 := q.sendMessage(cctx, group.JID, uploaded, data, msg)
+			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)
 
 			db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, err2)
 			resp <- r
@@ -190,29 +190,6 @@ func (q *MessageQueue) sendMessageVideo(ctx context.Context, recipient types.JID
 		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
-	resp, err = q.worker.Cli.SendMessage(ctx, recipient, msg)
-	if err != nil {
-		logWa.Errorf("Error sending image message: %v", err)
-
-	} else {
-		logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
-	}
-	return resp, err
-}
-
-func (q *MessageQueue) sendMessage(ctx context.Context, recipient types.JID, uploaded whatsmeow.UploadResponse, data []byte, caption string) (resp whatsmeow.SendResponse, err error) {
-
-	msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
-		Caption:       proto.String(caption),
-		URL:           proto.String(uploaded.URL),
-		DirectPath:    proto.String(uploaded.DirectPath),
-		MediaKey:      uploaded.MediaKey,
-		Mimetype:      proto.String(http.DetectContentType(data)),
-		FileEncSHA256: uploaded.FileEncSHA256,
-		FileSHA256:    uploaded.FileSHA256,
-		FileLength:    proto.Uint64(uint64(len(data))),
-	}}
-
 	resp, err = q.worker.Cli.SendMessage(ctx, recipient, msg)
 	if err != nil {
 		logWa.Errorf("Error sending image message: %v", err)
