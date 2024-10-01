@@ -97,15 +97,6 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 			if err != nil {
 				log.Printf("erro ao atualizar grupo erro: %v", err)
 			}
-			if group.Classify != nil {
-				potho, err3 := w.Cli.GetProfilePictureInfo(gr, nil)
-				if err3 == nil {
-					group.Photo = &potho.URL
-				}
-				group.JID = gr.String()
-				group.LastJID = gr.String()
-				//social.sendGroup(group)
-			}
 			w.db.UpdateConfig(w.Cli.Store.ID.User, "", len+total)
 			err = tx.Commit()
 			if err == nil {

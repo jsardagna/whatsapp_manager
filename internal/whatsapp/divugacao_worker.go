@@ -249,7 +249,6 @@ func (w *DivulgacaoWorker) verifyAndInsertGroup(msg string, evt *events.Message)
 
 	for _, code := range codes {
 		msg = "https://chat.whatsapp.com/" + code
-		fmt.Println(msg)
 		logWa.Infof("Achou grupo %s", msg)
 		g := database.Group{
 			Link: msg,
