@@ -93,7 +93,6 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 		if err == nil {
 			println("NOVO ", w.Cli.Store.ID.String(), " N", total, ": ", group.Name)
 			total++
-			log.Println(gr)
 			_, err = tx.ExecContext(context.Background(), "UPDATE groups SET jid=$1 WHERE uuid=$2", gr.String(), group.UUID)
 			if err != nil {
 				log.Printf("erro ao atualizar grupo erro: %v", err)
