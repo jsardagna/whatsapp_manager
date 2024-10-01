@@ -2,10 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"whatsapp-manager/internal/config"
 	"whatsapp-manager/internal/database"
-	"whatsapp-manager/internal/rest"
 	"whatsapp-manager/internal/whatsapp"
 
 	"github.com/joho/godotenv"
@@ -58,7 +56,7 @@ func main() {
 
 	// Inicializar o servidor
 	// Configuração da API REST
-	http.HandleFunc("/status", rest.StatusHandler)
+	//http.HandleFunc("/status", rest.StatusHandler)
 
 	//log.Println("Servidor iniciado na porta 8080")
 	//log.Fatal(http.ListenAndServe(":8080", nil))

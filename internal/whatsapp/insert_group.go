@@ -56,14 +56,12 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 
 	groups, _ := w.findAllGroups()
 	totalGrupos := len(groups)
-	println("Conta", w.Cli.Store.ID.String())
-	println("Total de grupos", totalGrupos)
 	len := len(groups)
 	if len > 300 {
 		w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", len)
 		return
 	}
-	log.Println("Inserindo")
+	println("INSERINDO ", w.Cli.Store.ID.String(), " GRUPOS ", totalGrupos)
 	total := 0
 	for {
 		// Comece uma transação para selecionar e travar os próximos 10 registros
@@ -81,7 +79,6 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 		order by date desc FOR UPDATE SKIP LOCKED LIMIT 1`).Scan(&group.UUID, &group.Link, &group.Name, &group.Classify, &group.Date, &group.Created); err != nil {
 			tx.Rollback()
 			if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
-				fmt.Printf("sem registros")
 				break
 			} else {
 				fmt.Printf("Erro: %v\n", err)
@@ -92,12 +89,9 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 		// Processar os registros aqui
 		defer tx.Rollback()
 
-		fmt.Println("Link:", group.Link)
-		fmt.Println("Name:", group.Name)
-		fmt.Println("TOTAL:", total)
-
 		gr, err := w.joininvitelink(group.Link)
 		if err == nil {
+			println("NOVO ", w.Cli.Store.ID.String(), " N", total, ": ", group.Name)
 			total++
 			log.Println(gr)
 			_, err = tx.ExecContext(context.Background(), "UPDATE groups SET jid=$1 WHERE uuid=$2", gr.String(), group.UUID)
@@ -138,7 +132,7 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 		} else {
 			_, err = tx.ExecContext(context.Background(), "UPDATE groups SET deleted = true, error = $1 WHERE uuid = $2", err.Error(), group.UUID)
 			if err != nil {
-				log.Printf("Atualizando erro: %v", err)
+				println("ERRO ", w.Cli.Store.ID.String(), ": ", err.Error())
 			}
 			err = tx.Commit()
 			if err == nil {
@@ -148,8 +142,8 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 				total = 0
 			}
 		}
-		if total >= 80 {
-			time.Sleep(time.Duration(3 * 1 * time.Hour))
+		if total >= 100 {
+			time.Sleep(time.Duration(24 * 1 * time.Hour))
 			break
 		}
 	}

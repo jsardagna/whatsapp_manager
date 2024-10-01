@@ -23,7 +23,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 	cli := q.worker.Cli
 	groups, err := q.worker.findAllGroups()
 	if err != nil {
-		log.Printf("Failed to get group list: %v", err)
+		println("FALHA AO BUSCAR GRUPOS:", q.worker.device.ID.User)
 	} else {
 		for _, group := range groups {
 			if group.JID.String() == ignore {
@@ -33,19 +33,17 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 
 			valid := kind == nil && db.ValidGroupForbidden(group.JID) || kind != nil && db.ValidGroupKind(group.JID, *kind, ddd)
 			if valid {
-				fmt.Println("Grupo INSTAGRAN", group.Name)
 				cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 				resp := make(chan whatsmeow.SendResponse)
 				var r whatsmeow.SendResponse
 
 				go func() {
 					r, _ = cli.SendMessage(cctx, group.JID, newmsg)
-					fmt.Println("Done INSTAGRAN", group.Name)
 					resp <- r
 				}()
 				select {
 				case <-resp:
-					fmt.Println("Enviado", group.Name)
+					fmt.Println("LINK ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
 					time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
 				case <-cctx.Done():
 					fmt.Println(cctx.Err())
@@ -94,7 +92,6 @@ func (q *MessageQueue) sendAllMessagesVideo(ignore string, data []byte, msg stri
 }
 
 func (q *MessageQueue) SendVideo(group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {
-	fmt.Println("Grupo", group.Name)
 	cctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
 	resp := make(chan whatsmeow.SendResponse)
 	go func() {
@@ -107,7 +104,7 @@ func (q *MessageQueue) SendVideo(group *types.GroupInfo, uploaded whatsmeow.Uplo
 		fmt.Println(cctx.Err())
 		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, cctx.Err())
 	case <-resp:
-		fmt.Println("Enviado", group.Name)
+		fmt.Println("VIDEO ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
 		time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
 	}
 }
@@ -126,13 +123,12 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	groups, err := w.findAllGroups()
 
 	if err != nil {
-		log.Printf("Failed to get group list: %v", err)
+		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User)
 	} else {
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
 
 			if group.JID.String() == ignore {
-				println("ignorando grupo")
 				continue
 			}
 
@@ -146,7 +142,6 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			}
 
 		}
-		fmt.Println("FINALIZADO")
 	}
 }
 
@@ -158,7 +153,6 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 
 	if valid {
 
-		fmt.Println("Grupo", group.Name)
 		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
@@ -172,7 +166,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 			fmt.Println(cctx.Err())
 			db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
 		case <-resp:
-			fmt.Println("Enviado", group.Name)
+			fmt.Println("IMAGEM ENVIADA ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
 			time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
 		}
 	}

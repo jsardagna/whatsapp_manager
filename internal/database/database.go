@@ -264,15 +264,12 @@ func (d *Database) VerifyAndInsertTelegram(link string, newGroup Group) bool {
 			uuid.New(), 0, time.Now(), false, newGroup.Description, link, newGroup.Name,
 			false, false, false, false, 0, "")
 		if err != nil {
-			log.Printf("falha ao inserir grupo: %v", err)
 			return false
 		} else {
-			fmt.Println("Dados inseridos com sucesso!")
 			return true
 		}
 
 	} else {
-		fmt.Println("O link já existe na tabela!")
 		return false
 	}
 }
@@ -295,15 +292,12 @@ func (d *Database) VerifyAndInsert(newGroup Group) (Group, bool) {
 
 		_, err = d.Conn.Exec("INSERT INTO groups (uuid, date, deleted, description, link, name,code) VALUES ($1, $2, $3, $4, $5, $6,$7)", newGroup.UUID, newGroup.Date, newGroup.Deleted, newGroup.Description, newGroup.Link, newGroup.Name, newGroup.Code)
 		if err != nil {
-			log.Printf("falha ao inserir grupo: %v", err)
 			return newGroup, false
 		} else {
-			fmt.Println("Dados inseridos com sucesso!")
 			return newGroup, true
 		}
 
 	} else {
-		fmt.Println("O link já existe na tabela!")
 		return newGroup, false
 	}
 }
@@ -328,19 +322,13 @@ func (d *Database) InsertGroupFone(cli *whatsmeow.Client, group *types.GroupInfo
 		INSERT INTO groups_phone ( uuid, date, phone, jid, name, description, link, created, paticipants) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		`, uuid.New(), time.Now(), phone, group.JID, group.Name, group.Topic, link, group.GroupCreated, total)
 		if err != nil {
-			log.Printf("falha ao inserir grupo: %v", err)
 			return
 		} else {
-			fmt.Println("Dados inseridos com sucesso!")
 			return
 		}
 	} else {
-		_, err = d.Conn.Exec(` update groups_phone set paticipants = $1  WHERE jid=$2 `, total, group.JID)
-		if err != nil {
-			log.Printf("grupo atualizado: %v", err)
-		} else {
-			fmt.Println("Dados atualizado com sucesso!")
-		}
+		d.Conn.Exec(` update groups_phone set paticipants = $1  WHERE jid=$2 `, total, group.JID)
+
 		if leave || total < 2 {
 			cli.LeaveGroup(group.JID)
 			time.Sleep(time.Duration(1 * time.Minute))

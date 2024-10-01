@@ -183,23 +183,15 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 			} else {
 				if evt.Message.ExtendedTextMessage != nil && evt.Message.ExtendedTextMessage.MatchedText != nil && strings.Contains(*evt.Message.ExtendedTextMessage.MatchedText, "https://chat.whatsapp.com/") {
 					msg := *evt.Message.ExtendedTextMessage.MatchedText
-					log.Println(msg)
-					log.Println("Grupo Encontrado, inserindo...")
 					go w.verifyAndInsertGroup(msg, evt)
 				} else if evt.Info.IsGroup && evt.Message.Conversation != nil && strings.Contains(*evt.Message.Conversation, "https://chat.whatsapp.com/") {
 					msg := *evt.Message.Conversation
-					log.Println(msg)
-					log.Println("Grupo Encontrado, inserindo...")
 					go w.verifyAndInsertGroup(msg, evt)
 				} else if evt.Message.ExtendedTextMessage != nil && evt.Message.ExtendedTextMessage.MatchedText != nil && strings.Contains(*evt.Message.ExtendedTextMessage.MatchedText, "https://t.me/") {
 					msg := *evt.Message.ExtendedTextMessage.MatchedText
-					log.Println(msg)
-					log.Println("Grupo Telegram")
 					go w.verifyAndInsertGroupTelegram(msg, evt)
 				} else if !evt.Info.IsGroup && evt.Message.Conversation != nil && strings.Contains(*evt.Message.Conversation, "https://t.me/") {
 					msg := *evt.Message.Conversation
-					log.Println(msg)
-					log.Println("Grupo Telegram")
 					go w.verifyAndInsertGroupTelegram(msg, evt)
 				} else if evt.Message.ExtendedTextMessage != nil && evt.Message.ExtendedTextMessage.MatchedText != nil && strings.Contains(*evt.Message.ExtendedTextMessage.MatchedText, ".com/share/") {
 					msg := *evt.Message.ExtendedTextMessage.MatchedText
