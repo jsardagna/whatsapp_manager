@@ -227,7 +227,6 @@ func (w *DivulgacaoWorker) verifyAndInsertGroupTelegram(msg string, evt *events.
 
 	for _, code := range codes {
 		msg = "https://t.me/" + code
-		fmt.Println(msg)
 		logWa.Infof("Achou grupo %s", msg)
 		g := database.Group{
 			Link: msg,
