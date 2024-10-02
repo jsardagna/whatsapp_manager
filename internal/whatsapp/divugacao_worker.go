@@ -70,7 +70,6 @@ func (w *DivulgacaoWorker) findAllGroups() ([]*types.GroupInfo, error) {
 }
 
 func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
-
 	db := w.db
 	switch evt := rawEvt.(type) {
 	case *events.Message:

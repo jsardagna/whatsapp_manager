@@ -504,8 +504,6 @@ func (d *Database) UpdateGroup(g Group, resp *types.GroupInfo) error {
 		return err
 	}
 
-	log.Printf("group update: %v", g.UUID)
-
 	return nil
 }
 

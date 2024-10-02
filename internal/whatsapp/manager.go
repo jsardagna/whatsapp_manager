@@ -72,7 +72,7 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 func (m *WhatsAppManager) StartAllDevices() error {
 
 	fmt.Println("Inicializando devices")
-	logWa = waLog.Stdout("Main", logLevel, true)
+	logWa = waLog.Stdout("Main", logLevel, false)
 
 	devices, err := m.getAllDevices()
 	if err != nil {
@@ -124,7 +124,7 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	logLevel := "INFO"
 	store.DeviceProps.Os = proto.String("Google Chrome")
 	store.DeviceProps.RequireFullSync = proto.Bool(false)
-	dbLog := waLog.Stdout("Database", logLevel, true)
+	dbLog := waLog.Stdout("Database", logLevel, false)
 
 	var err error
 	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), dbLog)
