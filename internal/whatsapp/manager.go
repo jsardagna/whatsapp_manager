@@ -57,13 +57,12 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 	worker := NewDivulgacaoWorker(m, device, m.cmdGroupJUID, m.db)
 
 	go func() {
-		/*
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Printf("Recuperado de um panic: %v\n", r)
-				}
-			}()
-		*/
+
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recuperado de um panic: %v\n", r)
+			}
+		}()
 
 		worker.Start(qrCodeChan)
 	}()
@@ -121,13 +120,10 @@ func (m *WhatsAppManager) getAllDevices() ([]*store.Device, error) {
 }
 
 func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
-	logLevel := "INFO"
 	store.DeviceProps.Os = proto.String("Google Chrome")
 	store.DeviceProps.RequireFullSync = proto.Bool(false)
-	dbLog := waLog.Stdout("Database", logLevel, false)
-
 	var err error
-	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), dbLog)
+	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), nil)
 	if err != nil {
 		logWa.Errorf("Erro ao conectar ao banco de dados: %v", err)
 		return m.storeContainer, err
