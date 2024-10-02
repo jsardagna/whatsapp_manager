@@ -16,7 +16,6 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
-	waLog "go.mau.fi/whatsmeow/util/log"
 	proto "google.golang.org/protobuf/proto"
 )
 
@@ -34,7 +33,7 @@ func NewBaseWhatsAppWorker(m *WhatsAppManager, device *store.Device, db database
 func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte, onComplete func()) error {
 	var isWaitingForPair atomic.Bool
 	var pairRejectChan = make(chan bool, 1)
-	w.Cli = whatsmeow.NewClient(w.device, waLog.Stdout("Cliente", logLevel, false))
+	w.Cli = whatsmeow.NewClient(w.device, nil)
 
 	w.Cli.PrePairCallback = func(jid types.JID, platform, businessName string) bool {
 		isWaitingForPair.Store(true)
