@@ -21,6 +21,8 @@ type DivulgacaoWorker struct {
 	nextmessage  bool
 	kindmessage  string
 	Connected    bool
+	queueN       *MessageQueue
+	queueAll     *MessageQueue
 }
 
 func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, cmdGroupJUID string, db database.Database) *DivulgacaoWorker {
@@ -58,10 +60,10 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {
-	queueN = w.NewMessageQueue(1)
-	queueAll = w.NewMessageQueue(1)
-	go w.processStack(queueN)
-	go w.processStack(queueAll)
+	w.queueN = w.NewMessageQueue(1)
+	w.queueAll = w.NewMessageQueue(1)
+	go w.processStack(w.queueN)
+	go w.processStack(w.queueAll)
 
 }
 
@@ -79,7 +81,6 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 					img := evt.Message.GetImageMessage()
 					data, err := w.Cli.Download(img)
 					if err != nil {
-						logWa.Errorf("Failed to download image: %v", err)
 						return
 					}
 					var caption = ""
@@ -88,16 +89,15 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 					}
 					if strings.Contains(w.kindmessage, "ENVIAR-") {
 						kind, ddd := extractPartsAndNumbers(w.kindmessage)
-						queueN.EnqueueImage(w.db, w.cmdGroupJUID, data, caption, kind, ddd)
+						w.queueN.EnqueueImage(w.db, w.cmdGroupJUID, data, caption, kind, ddd)
 					} else {
-						queueAll.EnqueueImage(w.db, w.cmdGroupJUID, data, caption, nil, nil)
+						w.queueAll.EnqueueImage(w.db, w.cmdGroupJUID, data, caption, nil, nil)
 					}
 					w.nextmessage = false
 				} else if w.nextmessage && evt.Message.VideoMessage != nil {
 					video := evt.Message.GetVideoMessage()
 					data, err := w.Cli.Download(video)
 					if err != nil {
-						logWa.Errorf("Failed to download video: %v", err)
 						return
 					}
 					var caption = ""
@@ -107,9 +107,9 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 
 					if strings.Contains(w.kindmessage, "ENVIAR-") {
 						kind, ddd := extractPartsAndNumbers(w.kindmessage)
-						queueN.EnqueueVideo(db, w.cmdGroupJUID, data, caption, kind, ddd)
+						w.queueN.EnqueueVideo(db, w.cmdGroupJUID, data, caption, kind, ddd)
 					} else {
-						queueAll.EnqueueVideo(db, w.cmdGroupJUID, data, caption, nil, nil)
+						w.queueAll.EnqueueVideo(db, w.cmdGroupJUID, data, caption, nil, nil)
 					}
 
 					w.nextmessage = false
@@ -122,9 +122,9 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 
 					if strings.Contains(w.kindmessage, "ENVIAR-") {
 						kind, ddd := extractPartsAndNumbers(w.kindmessage)
-						queueN.EnqueueLink(db, w.cmdGroupJUID, evt.Message, kind, ddd)
+						w.queueN.EnqueueLink(db, w.cmdGroupJUID, evt.Message, kind, ddd)
 					} else {
-						queueAll.EnqueueLink(db, w.cmdGroupJUID, evt.Message, nil, nil)
+						w.queueAll.EnqueueLink(db, w.cmdGroupJUID, evt.Message, nil, nil)
 					}
 
 					w.nextmessage = false
@@ -141,9 +141,9 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 						w.kindmessage = cmd
 						total := 0
 						if strings.Contains(cmd, "ENVIAR-") {
-							total = len(queueN.stack)
+							total = len(w.queueN.stack)
 						} else {
-							total = len(queueAll.stack)
+							total = len(w.queueAll.stack)
 						}
 						w.enviarTexto(cmd, total, evt)
 					}
@@ -199,7 +199,6 @@ func (w *DivulgacaoWorker) verifyAndInsertGroupTelegram(msg string, evt *events.
 
 	for _, code := range codes {
 		msg = "https://t.me/" + code
-		logWa.Infof("Achou grupo %s", msg)
 		g := database.Group{
 			Link: msg,
 			Code: code,
@@ -221,7 +220,6 @@ func (w *DivulgacaoWorker) verifyAndInsertGroup(msg string, evt *events.Message)
 
 	for _, code := range codes {
 		msg = "https://chat.whatsapp.com/" + code
-		logWa.Infof("Achou grupo %s", msg)
 		g := database.Group{
 			Link: msg,
 			Code: code,
@@ -271,10 +269,8 @@ func (w *DivulgacaoWorker) queryInveteLink(g database.Group) bool {
 
 	if err != nil {
 		w.db.InvalidGroup(g)
-		logWa.Errorf("Failed to resolve group invite link: %v", err)
 	} else {
 		w.db.UpdateGroup(g, resp)
-		logWa.Infof("Group info: %+v", resp)
 	}
 	return false
 }

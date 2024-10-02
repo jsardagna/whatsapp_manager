@@ -56,7 +56,7 @@ func (w *ComandoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 	case *events.Message:
 		if !evt.Info.IsFromMe {
 			if evt.Info.IsGroup && w.cmdGroupJUID == evt.Info.Chat.String() && !w.db.IsPhoneExists(evt.Info.Sender) {
-				logWa.Infof("Comando %s from %s: %+v", evt.Info.ID, evt.Info.SourceString(), evt.Message)
+
 				if evt.Message.Conversation != nil {
 					cmd := ""
 					if evt.Message.ExtendedTextMessage != nil {

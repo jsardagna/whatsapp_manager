@@ -7,9 +7,6 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 )
 
-var queueN *MessageQueue
-var queueAll *MessageQueue
-
 // MessageQueue representa a fila de mensagens
 type MessageQueue struct {
 	worker    *DivulgacaoWorker

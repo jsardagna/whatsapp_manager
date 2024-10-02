@@ -38,16 +38,16 @@ func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte, onComplete func()) 
 	w.Cli.PrePairCallback = func(jid types.JID, platform, businessName string) bool {
 		isWaitingForPair.Store(true)
 		defer isWaitingForPair.Store(false)
-		logWa.Infof("Pairing %s (platform: %q, business name: %q). Type r within 3 seconds to reject pair", jid, platform, businessName)
+		//logWa.Infof("Pairing %s (platform: %q, business name: %q). Type r within 3 seconds to reject pair", jid, platform, businessName)
 		select {
 		case reject := <-pairRejectChan:
 			if reject {
-				logWa.Infof("Rejecting pair")
+				//		logWa.Infof("Rejecting pair")
 				return false
 			}
 		case <-time.After(3 * time.Second):
 		}
-		logWa.Infof("Accepting pair")
+		//logWa.Infof("Accepting pair")
 		return true
 	}
 
@@ -120,10 +120,10 @@ func (b *BaseWhatsAppWorker) sendMessage(ctx context.Context, recipient types.JI
 
 	resp, err = b.Cli.SendMessage(ctx, recipient, msg)
 	if err != nil {
-		logWa.Errorf("Error sending image message: %v", err)
+		//logWa.Errorf("Error sending image message: %v", err)
 
 	} else {
-		logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
+		//logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
 	}
 	return resp, err
 }

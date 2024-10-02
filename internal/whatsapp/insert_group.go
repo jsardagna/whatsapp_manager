@@ -39,15 +39,15 @@ func (w *DivulgacaoWorker) acceptGroup(url string) string {
 func (w *DivulgacaoWorker) joininvitelink(link string) (types.JID, error) {
 
 	if w.acceptGroup(link) == "" {
-		logWa.Errorf("Link Invalido: %s, deve começar com https://chat.whatsapp.com/[####]", link)
+		//	logWa.Errorf("Link Invalido: %s, deve começar com https://chat.whatsapp.com/[####]", link)
 		return types.EmptyJID, whatsmeow.ErrIQNotFound
 	}
 
 	groupID, err := w.Cli.JoinGroupWithLink(link)
 	if err != nil {
-		logWa.Errorf("Failed to join group via invite link: %v", err)
+		//logWa.Errorf("Failed to join group via invite link: %v", err)
 	} else {
-		logWa.Infof("Joined %s", groupID)
+		//logWa.Infof("Joined %s", groupID)
 	}
 	return groupID, err
 }

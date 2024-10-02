@@ -11,7 +11,6 @@ import (
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
-	waLog "go.mau.fi/whatsmeow/util/log"
 	proto "google.golang.org/protobuf/proto"
 )
 
@@ -24,9 +23,6 @@ type WhatsAppManager struct {
 	grupoComando   string
 	deviceComando  string
 }
-
-var logWa waLog.Logger
-var logLevel = "ERROR"
 
 func NewWhatsAppManager(cmdGroupJUID string, db database.Database) *WhatsAppManager {
 	return &WhatsAppManager{
@@ -71,7 +67,6 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 func (m *WhatsAppManager) StartAllDevices() error {
 
 	fmt.Println("Inicializando devices")
-	logWa = waLog.Stdout("Main", logLevel, false)
 
 	devices, err := m.getAllDevices()
 	if err != nil {
@@ -113,7 +108,7 @@ func (m *WhatsAppManager) getAllDevices() ([]*store.Device, error) {
 
 	devices, err := m.storeContainer.GetAllDevices()
 	if err != nil {
-		logWa.Errorf("Erro ao obter dispositivos: %v", err)
+		//logWa.Errorf("Erro ao obter dispositivos: %v", err)
 		return nil, err
 	}
 	return devices, nil
@@ -125,7 +120,6 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	var err error
 	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), nil)
 	if err != nil {
-		logWa.Errorf("Erro ao conectar ao banco de dados: %v", err)
 		return m.storeContainer, err
 	}
 
@@ -193,10 +187,10 @@ func parseJID(arg string) types.JID {
 	} else {
 		recipient, err := types.ParseJID(arg)
 		if err != nil {
-			logWa.Errorf("Invalid JID %s: %v", arg, err)
+			//logWa.Errorf("Invalid JID %s: %v", arg, err)
 			return recipient
 		} else if recipient.User == "" {
-			logWa.Errorf("Invalid JID %s: no server specified", arg)
+			//logWa.Errorf("Invalid JID %s: no server specified", arg)
 			return recipient
 		}
 		return recipient

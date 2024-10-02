@@ -186,10 +186,9 @@ func (q *MessageQueue) sendMessageVideo(ctx context.Context, recipient types.JID
 	}}
 	resp, err = q.worker.Cli.SendMessage(ctx, recipient, msg)
 	if err != nil {
-		logWa.Errorf("Error sending image message: %v", err)
-
+		//logWa.Errorf("Error sending image message: %v", err)
 	} else {
-		logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
+		//logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
 	}
 	return resp, err
 }
