@@ -42,14 +42,12 @@ func main() {
 	}
 	defer statusDB.CloneConnection()
 
-	divulgador = config.GetEnv("DIVULGACAO", divulgador)
-
 	grupoComando := config.GetEnv("COMANDOS", divulgador)
 
 	deviceComando := config.GetEnv("DEVICE_COMMANDO", divulgador)
 
 	// Inicializar gerenciador de WhatsApp
-	manager := whatsapp.NewWhatsAppManager(divulgador, *statusDB)
+	manager := whatsapp.NewWhatsAppManager(*statusDB)
 
 	store, err := manager.InitializeStore()
 	if err != nil {

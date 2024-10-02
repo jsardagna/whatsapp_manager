@@ -18,17 +18,15 @@ type WhatsAppManager struct {
 	divulgadores   map[string]*DivulgacaoWorker
 	mu             sync.Mutex
 	storeContainer *sqlstore.Container
-	cmdGroupJUID   string
 	db             database.Database
 	grupoComando   string
 	deviceComando  string
 }
 
-func NewWhatsAppManager(cmdGroupJUID string, db database.Database) *WhatsAppManager {
+func NewWhatsAppManager(db database.Database) *WhatsAppManager {
 	return &WhatsAppManager{
 		divulgadores: make(map[string]*DivulgacaoWorker),
 		db:           db,
-		cmdGroupJUID: cmdGroupJUID,
 	}
 }
 
@@ -50,7 +48,7 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	worker := NewDivulgacaoWorker(m, device, m.cmdGroupJUID, m.db)
+	worker := NewDivulgacaoWorker(m, device, m.db)
 
 	go func() {
 

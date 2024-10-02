@@ -3,7 +3,6 @@ package whatsapp
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"whatsapp-manager/internal/database"
@@ -25,9 +24,9 @@ type DivulgacaoWorker struct {
 	queueAll     *MessageQueue
 }
 
-func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, cmdGroupJUID string, db database.Database) *DivulgacaoWorker {
+func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, db database.Database) *DivulgacaoWorker {
 	baseWorker := NewBaseWhatsAppWorker(m, device, db)
-	return &DivulgacaoWorker{BaseWhatsAppWorker: baseWorker, cmdGroupJUID: cmdGroupJUID}
+	return &DivulgacaoWorker{BaseWhatsAppWorker: baseWorker}
 }
 
 func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
@@ -46,14 +45,14 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	println("CELULAR:", w.Cli.Store.ID.User, " GRUPOS:", len(groups))
 	go w.monitorInsert(w.Cli.Store.ID.User)
 	w.m.divulgadores[w.device.ID.User] = w
-
-	_, err := w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8")
-	if err == nil {
-		w.db.InsertConfig(w.Cli.Store.ID.User, w.cmdGroupJUID)
+	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
+	if cmd != nil {
+		w.cmdGroupJUID = *cmd
+		group, _ := w.Cli.JoinGroupWithLink(*cmd)
+		w.cmdGroupJUID = group.String()
 	} else {
-		log.Println(err)
+		println("CELULAR SEM LINK", w.Cli.Store.ID.User)
 	}
-
 	w.Connected = true
 
 	return nil
