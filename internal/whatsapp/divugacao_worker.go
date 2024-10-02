@@ -70,43 +70,12 @@ func (w *DivulgacaoWorker) findAllGroups() ([]*types.GroupInfo, error) {
 }
 
 func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
+
 	db := w.db
 	switch evt := rawEvt.(type) {
 	case *events.Message:
-		metaParts := []string{fmt.Sprintf("pushname: %s", evt.Info.PushName), fmt.Sprintf("timestamp: %s", evt.Info.Timestamp)}
-		if evt.Info.Type != "" {
-			metaParts = append(metaParts, fmt.Sprintf("type: %s", evt.Info.Type))
-		}
-		if evt.Info.Category != "" {
-			metaParts = append(metaParts, fmt.Sprintf("category: %s", evt.Info.Category))
-		}
-		if evt.IsViewOnce {
-			metaParts = append(metaParts, "view once")
-		}
-		if evt.IsViewOnce {
-			metaParts = append(metaParts, "ephemeral")
-		}
-		if evt.IsViewOnceV2 {
-			metaParts = append(metaParts, "ephemeral (v2)")
-		}
-		if evt.IsDocumentWithCaption {
-			metaParts = append(metaParts, "document with caption")
-		}
-		if evt.IsEdit {
-			metaParts = append(metaParts, "edit")
-		}
-
-		if evt.Message.Conversation != nil {
-			cmd := *evt.Message.Conversation
-			if cmd == "ENVIAR" {
-				fmt.Printf("evt.Info.Chat.String(): %v\n", evt.Info.Chat.String())
-			}
-		}
-
 		if !evt.Info.IsFromMe {
-
-			if evt.Info.IsGroup && w.cmdGroupJUID == evt.Info.Chat.String() && !w.db.IsPhoneExists(evt.Info.Sender) {
-				logWa.Infof("Comando %s from %s (%s): %+v", evt.Info.ID, evt.Info.SourceString(), strings.Join(metaParts, ", "), evt.Message)
+			if evt.Info.IsGroup && w.cmdGroupJUID == evt.Info.Chat.String() && !db.IsPhoneExists(evt.Info.Sender) {
 				if w.nextmessage && evt.Message.ImageMessage != nil {
 					img := evt.Message.GetImageMessage()
 					data, err := w.Cli.Download(img)
@@ -219,7 +188,11 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 
 func (w *DivulgacaoWorker) enviarTexto(cmd string, total int, evt *events.Message) {
 	msg := &waE2E.Message{Conversation: proto.String(fmt.Sprintf("Aguardando MSG, Fila: %s na espera: %d", cmd, total))}
-	w.Cli.SendMessage(context.Background(), evt.Info.Chat, msg)
+	println("enviando texto..", *msg.Conversation)
+	_, err := w.Cli.SendMessage(context.Background(), evt.Info.Chat, msg)
+	if err != nil {
+		println("erro ", err.Error())
+	}
 }
 
 func (w *DivulgacaoWorker) verifyAndInsertGroupTelegram(msg string, evt *events.Message) {

@@ -120,18 +120,20 @@ func (m *WhatsAppManager) getAllDevices() ([]*store.Device, error) {
 	return devices, nil
 }
 
-func (m *WhatsAppManager) InitializeStore() error {
+func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	logLevel := "INFO"
 	store.DeviceProps.Os = proto.String("Google Chrome")
 	store.DeviceProps.RequireFullSync = proto.Bool(false)
 	dbLog := waLog.Stdout("Database", logLevel, true)
+
 	var err error
 	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), dbLog)
 	if err != nil {
 		logWa.Errorf("Erro ao conectar ao banco de dados: %v", err)
-		return nil
+		return m.storeContainer, err
 	}
-	return nil
+
+	return m.storeContainer, nil
 }
 
 func (m *WhatsAppManager) ListarDivulgadoresInativos() string {

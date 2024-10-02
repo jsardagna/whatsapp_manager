@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,8 +56,11 @@ type Message struct {
 	Message string
 }
 
-func NewDatabase() (*Database, error) {
+var phoneCache map[string]bool
+var cacheMutex sync.RWMutex
 
+func NewDatabase() (*Database, error) {
+	phoneCache = make(map[string]bool)
 	db, err := sql.Open(os.Getenv("DIALECT"), os.Getenv("ADDRESS"))
 	if err != nil {
 		return nil, err
@@ -156,13 +160,30 @@ func (d *Database) AnotherSend(juid types.JID, phone string) (bool, error) {
 }
 
 func (d *Database) IsPhoneExists(juid types.JID) bool {
-	var exists bool
+	// Verificar primeiro se o número já está no cache
+	cacheMutex.RLock() // Usar bloqueio de leitura para acessar o cache
+	exists, cached := phoneCache[juid.User]
+	cacheMutex.RUnlock()
+
+	if cached {
+		// Se o número está no cache, retornar o valor do cache
+		return exists
+	}
+
+	// Caso não esteja no cache, consultar o banco de dados
 	err := d.Conn.QueryRow(`
 		SELECT EXISTS (SELECT 1 FROM config WHERE juid = $1);
 	`, juid.User).Scan(&exists)
 	if err != nil {
+		log.Printf("Erro ao verificar o telefone no banco: %v", err)
 		return false
 	}
+
+	// Armazenar o resultado da consulta no cache
+	cacheMutex.Lock() // Bloqueio de escrita para adicionar ao cache
+	phoneCache[juid.User] = exists
+	cacheMutex.Unlock()
+
 	return exists
 }
 

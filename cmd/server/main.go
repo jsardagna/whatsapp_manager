@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 	"whatsapp-manager/internal/config"
 	"whatsapp-manager/internal/database"
 	"whatsapp-manager/internal/whatsapp"
@@ -23,13 +28,21 @@ func init() {
 
 func main() {
 
+	// Criar um contexto que será cancelado quando o programa receber um sinal de término (Ctrl+C)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Canal para capturar sinais do sistema (SIGINT e SIGTERM)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
 	statusDB, err := database.NewDatabase()
 	if err != nil {
 		log.Fatal("Erro ao conectar ao banco de status:", err)
 	}
 	defer statusDB.CloneConnection()
 
-	divulgador = config.GetEnv("DIVULGACACAO", divulgador)
+	divulgador = config.GetEnv("DIVULGACAO", divulgador)
 
 	grupoComando := config.GetEnv("COMANDOS", divulgador)
 
@@ -38,10 +51,11 @@ func main() {
 	// Inicializar gerenciador de WhatsApp
 	manager := whatsapp.NewWhatsAppManager(divulgador, *statusDB)
 
-	err = manager.InitializeStore()
+	store, err := manager.InitializeStore()
 	if err != nil {
 		log.Fatalf("Erro ao inicializar Banco: %v", err)
 	}
+	defer store.Close()
 
 	manager.StartComando(grupoComando, deviceComando)
 	if err != nil {
@@ -54,13 +68,18 @@ func main() {
 		log.Fatalf("Erro ao conectar divulgadores: %v", err)
 	}
 
-	// Inicializar o servidor
-	// Configuração da API REST
-	//http.HandleFunc("/status", rest.StatusHandler)
+	go func() {
+		// Aguardar um sinal de interrupção
+		<-sigChan
+		log.Println("Recebido sinal de encerramento, finalizando...")
+		cancel() // Cancelar o contexto para interromper operações em andamento
+	}()
 
-	//log.Println("Servidor iniciado na porta 8080")
-	//log.Fatal(http.ListenAndServe(":8080", nil))
+	// Manter o servidor rodando, verificando se o contexto foi cancelado
+	<-ctx.Done()
+	log.Println("Encerrando a aplicação com segurança...")
 
-	// Manter o servidor rodando
-	select {}
+	// Adicionar qualquer outra limpeza necessária (fechar conexões, encerrar goroutines, etc.)
+	time.Sleep(1 * time.Second) // Simular uma tarefa de limpeza
+	log.Println("Aplicação finalizada com sucesso.")
 }
