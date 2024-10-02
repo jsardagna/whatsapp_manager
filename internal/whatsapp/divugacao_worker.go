@@ -51,7 +51,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		group, _ := w.Cli.JoinGroupWithLink(*cmd)
 		w.cmdGroupJUID = group.String()
 	} else {
-		println("CELULAR SEM LINK", w.Cli.Store.ID.User)
+		println("CELULAR SEM LINK!", w.Cli.Store.ID.User)
 	}
 	w.Connected = true
 
