@@ -39,6 +39,10 @@ func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
 
 func (w *DivulgacaoWorker) workerDivulgacao() error {
 
+	if !w.estaAtivo() {
+		return nil
+	}
+
 	go w.inicializaFila()
 	w.Cli.RemoveEventHandlers()
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
@@ -65,6 +69,14 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	}
 	w.Connected = true
 	return nil
+}
+
+func (w *DivulgacaoWorker) estaAtivo() bool {
+	if w.Cli == nil || w.Cli.Store == nil || w.Cli.Store.ID == nil {
+		w.Connected = false
+		return false
+	}
+	return true
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {

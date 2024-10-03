@@ -17,6 +17,9 @@ import (
 
 func (w *DivulgacaoWorker) monitorInsert(juid string) {
 	for {
+		if !w.estaAtivo() {
+			return
+		}
 		// Verifica se o campo "inserir" está true
 		if w.db.IsInsertEnabled(juid) {
 			// Se estiver true, chama a função callback
@@ -44,11 +47,6 @@ func (w *DivulgacaoWorker) joininvitelink(link string) (types.JID, error) {
 	}
 
 	groupID, err := w.Cli.JoinGroupWithLink(link)
-	if err != nil {
-		//logWa.Errorf("Failed to join group via invite link: %v", err)
-	} else {
-		//logWa.Infof("Joined %s", groupID)
-	}
 	return groupID, err
 }
 
@@ -62,6 +60,9 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 	}
 	total := 0
 	for {
+		if !w.estaAtivo() {
+			return
+		}
 		// Comece uma transação para selecionar e travar os próximos 10 registros
 		tx, err := w.db.Conn.BeginTx(context.Background(), nil)
 		if err != nil {

@@ -132,6 +132,10 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
 
+			if !w.estaAtivo() {
+				return
+			}
+
 			if group.JID.String() == ignore ||
 				group.JID.String() == "120363149950387591@g.us" ||
 				group.JID.String() == "120363343818835998@g.us" ||
@@ -160,10 +164,13 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 
 	if valid {
 
-		cctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
+		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
 			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)
+			if !w.estaAtivo() {
+				return
+			}
 			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, err2)
 			resp <- r
 		}()
@@ -173,7 +180,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
 		case <-resp:
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
-			time.Sleep(time.Duration(5+rand.Intn(3)) * time.Second)
+			time.Sleep(time.Duration(5+rand.Intn(2)) * time.Second)
 		}
 	}
 }
