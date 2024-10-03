@@ -51,7 +51,8 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		group, _ := w.Cli.JoinGroupWithLink(*cmd)
 		w.cmdGroupJUID = group.String()
 	} else {
-		println("CELULAR SEM LINK!", w.Cli.Store.ID.User)
+		group, _ := w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW")
+		w.cmdGroupJUID = group.String()
 	}
 	w.Connected = true
 
