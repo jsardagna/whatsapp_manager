@@ -40,6 +40,7 @@ func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
 func (w *DivulgacaoWorker) workerDivulgacao() error {
 
 	go w.inicializaFila()
+	w.Cli.RemoveEventHandlers()
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	groups, _ := w.findAllGroups()
 	println("CELULAR:", w.Cli.Store.ID.User, " GRUPOS:", len(groups))
@@ -47,12 +48,10 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	w.m.divulgadores[w.device.ID.User] = w
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
-		println("GRUPO ACHADO", w.Cli.Store.ID.User)
 		w.cmdGroupJUID = *cmd
 		group, _ := w.Cli.JoinGroupWithLink(*cmd)
 		w.cmdGroupJUID = group.String()
 	} else {
-		println("INSERINDO GRUPO", w.Cli.Store.ID.User)
 		x := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
 		group, _ := w.Cli.JoinGroupWithLink(x)
 		w.db.InsertConfig(w.Cli.Store.ID.User, x)
