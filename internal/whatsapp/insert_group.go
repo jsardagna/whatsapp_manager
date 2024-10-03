@@ -60,7 +60,6 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 		w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", totalGrupos)
 		return
 	}
-	println("INSERINDO ", w.Cli.Store.ID.String(), " GRUPOS ", totalGrupos)
 	total := 0
 	for {
 		// Comece uma transação para selecionar e travar os próximos 10 registros
