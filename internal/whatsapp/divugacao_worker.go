@@ -51,7 +51,9 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		group, _ := w.Cli.JoinGroupWithLink(*cmd)
 		w.cmdGroupJUID = group.String()
 	} else {
-		group, _ := w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW")
+		x := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
+		group, _ := w.Cli.JoinGroupWithLink(x)
+		w.db.InsertConfig(w.Cli.Store.ID.User, x)
 		w.cmdGroupJUID = group.String()
 	}
 	w.Connected = true
