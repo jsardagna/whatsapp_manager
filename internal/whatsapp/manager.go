@@ -92,6 +92,7 @@ func (m *WhatsAppManager) StartAllDevices() error {
 			if !strings.Contains(device.ID.String(), m.deviceComando) {
 				fmt.Printf("Iniciando worker para o device: %s\n", device.ID.String())
 				m.startWorker(device, nil)
+				inicializados[device.ID.User] = true
 			}
 		}(device)
 	}
