@@ -248,9 +248,14 @@ func (d *Database) InsertConfig(juid string, cmdGroupJUID string) error {
 		return err
 	}
 
-	// Se o juid já existir, retornar sem inserir
+	// Se o juid já existir, faz update no server e cmd_group_juid
 	if exists {
-
+		_, err = d.Conn.Exec("UPDATE config SET server = true, cmd_group_juid = $1 WHERE juid = $2", cmdGroupJUID, juid)
+		if err != nil {
+			log.Printf("Erro ao atualizar o server e cmd_group_juid para o juid %s: %v", juid, err)
+			return err
+		}
+		log.Printf("JUID %s atualizado com sucesso.", juid)
 		return nil
 	}
 
