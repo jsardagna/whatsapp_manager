@@ -77,7 +77,6 @@ func NewDatabase() (*Database, error) {
 func (d *Database) GetGroup(id string) *string {
 	var err error
 	cmdGroupJUID, err := d.getCmdGroupJUID(id)
-	fmt.Printf("cmdGroupJUID: %v\n", cmdGroupJUID)
 	if err != nil {
 		log.Println("Forneça o convite do grupo onde serão enviado os comandos:")
 		return nil
