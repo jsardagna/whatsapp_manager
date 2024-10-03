@@ -72,6 +72,9 @@ func (m *WhatsAppManager) StartAllDevices() error {
 	}
 	fmt.Println("Devices Ativos: ", len(devices))
 
+	// Mapa para rastrear usuários de dispositivos já inicializados
+	inicializados := make(map[string]bool)
+
 	for _, device := range devices {
 		go func(device *store.Device) {
 			// Verifica se o ID do device é nulo ou se o usuário já existe
@@ -79,12 +82,16 @@ func (m *WhatsAppManager) StartAllDevices() error {
 				fmt.Println("Device com ID nulo ou User vazio, pulando.")
 				return
 			}
-			// Verifica se o ID do dispositivo já contém o comando para não inicializar
+
+			// Verifica se já existe um dispositivo com o mesmo User inicializado
+			if inicializados[device.ID.User] {
+				fmt.Printf("Dispositivo com User %s já inicializado, pulando.\n", device.ID.User)
+				return
+			}
+			// Verifica se o ID do dispositivo é o do comenando e não inicializar
 			if !strings.Contains(device.ID.String(), m.deviceComando) {
 				fmt.Printf("Iniciando worker para o device: %s\n", device.ID.String())
 				m.startWorker(device, nil)
-			} else {
-				fmt.Printf("Dispositivo %s já possui um worker ou contém o comando, pulando.\n", device.ID.String())
 			}
 		}(device)
 	}
