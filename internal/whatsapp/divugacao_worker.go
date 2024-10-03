@@ -49,20 +49,21 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
 		w.cmdGroupJUID = *cmd
-		group, _ := w.Cli.JoinGroupWithLink(*cmd)
+		group, err := w.Cli.JoinGroupWithLink(*cmd)
+		if err != nil { //caso de erro
+			gr, _ := w.Cli.GetGroupInfoFromLink(*cmd)
+			group = gr.JID
+		}
 		w.cmdGroupJUID = group.String()
 	} else {
-		x := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
+		x := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" //DIVULGAÇÃO2
 		group, _ := w.Cli.JoinGroupWithLink(x)
 		w.db.InsertConfig(w.Cli.Store.ID.User, x)
 		w.cmdGroupJUID = group.String()
-	}
-	if *cmd == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
-		println(cmd, w.cmdGroupJUID)
-		w.Cli.LeaveGroup(parseJID("120363149950387591@g.us"))
+		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp") //DIVULGAÇÃO3
+		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8") //DIVULGAÇÃO
 	}
 	w.Connected = true
-
 	return nil
 }
 

@@ -56,9 +56,8 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 
 	groups, _ := w.findAllGroups()
 	totalGrupos := len(groups)
-	len := len(groups)
-	if len > 300 {
-		w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", len)
+	if totalGrupos > 300 {
+		w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", totalGrupos)
 		return
 	}
 	println("INSERINDO ", w.Cli.Store.ID.String(), " GRUPOS ", totalGrupos)
@@ -97,7 +96,7 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 			if err != nil {
 				log.Printf("erro ao atualizar grupo erro: %v", err)
 			}
-			w.db.UpdateConfig(w.Cli.Store.ID.User, "", len+total)
+			w.db.UpdateConfig(w.Cli.Store.ID.User, "", totalGrupos+total)
 			err = tx.Commit()
 			if err == nil {
 				time.Sleep(time.Duration(MapExponential(totalGrupos)+rand.Intn(5)) * time.Second)
@@ -115,7 +114,7 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 			tx.Rollback()
 			break
 		} else if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("rate-overlimit")) {
-			w.db.UpdateConfig(w.Cli.Store.ID.User, "rate-overlimit", len)
+			w.db.UpdateConfig(w.Cli.Store.ID.User, "rate-overlimit", totalGrupos)
 			err = nil
 			tx.Rollback()
 			break
@@ -132,9 +131,9 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 				total = 0
 			}
 		}
-		if total >= 100 {
-			time.Sleep(time.Duration(24 * 1 * time.Hour))
-			break
+		if totalGrupos+total >= 300 {
+			w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", totalGrupos)
+			return
 		}
 	}
 }

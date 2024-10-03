@@ -26,8 +26,10 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 		println("FALHA AO BUSCAR GRUPOS:", q.worker.device.ID.User)
 	} else {
 		for _, group := range groups {
-			if group.JID.String() == ignore {
-				println("ignorando grupo")
+			if group.JID.String() == ignore ||
+				group.JID.String() == "120363149950387591@g.us" ||
+				group.JID.String() == "120363343818835998@g.us" ||
+				group.JID.String() == "120363330490936340@g.us" {
 				continue
 			}
 
@@ -70,8 +72,10 @@ func (q *MessageQueue) sendAllMessagesVideo(ignore string, data []byte, msg stri
 	} else {
 		for _, group := range groups {
 
-			if group.JID.String() == ignore {
-				println("ignorando grupo")
+			if group.JID.String() == ignore ||
+				group.JID.String() == "120363149950387591@g.us" ||
+				group.JID.String() == "120363343818835998@g.us" ||
+				group.JID.String() == "120363330490936340@g.us" {
 				continue
 			}
 
@@ -128,7 +132,10 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
 
-			if group.JID.String() == ignore {
+			if group.JID.String() == ignore ||
+				group.JID.String() == "120363149950387591@g.us" ||
+				group.JID.String() == "120363343818835998@g.us" ||
+				group.JID.String() == "120363330490936340@g.us" {
 				continue
 			}
 
@@ -153,21 +160,20 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 
 	if valid {
 
-		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		cctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
 			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)
-
-			db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, err2)
+			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, err2)
 			resp <- r
 		}()
 		select {
 		case <-cctx.Done():
-			fmt.Println(cctx.Err())
-			db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
+			fmt.Println(q.worker.Cli.Store.ID.User, cctx.Err())
+			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
 		case <-resp:
-			fmt.Println("IMAGEM ENVIADA ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
-			time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
+			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
+			time.Sleep(time.Duration(5+rand.Intn(5)) * time.Second)
 		}
 	}
 }
