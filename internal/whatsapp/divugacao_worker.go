@@ -57,6 +57,10 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		w.db.InsertConfig(w.Cli.Store.ID.User, x)
 		w.cmdGroupJUID = group.String()
 	}
+	if *cmd == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
+		println(cmd, w.cmdGroupJUID)
+		w.Cli.LeaveGroup(parseJID("120363149950387591@g.us"))
+	}
 	w.Connected = true
 
 	return nil
