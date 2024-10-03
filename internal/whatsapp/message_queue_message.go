@@ -173,7 +173,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
 		case <-resp:
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
-			time.Sleep(time.Duration(5+rand.Intn(5)) * time.Second)
+			time.Sleep(time.Duration(5+rand.Intn(3)) * time.Second)
 		}
 	}
 }
