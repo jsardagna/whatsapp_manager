@@ -149,7 +149,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 	// Obter dispositivos ativos do banco de dados
 	activeDevices, err := m.db.GetActiveDevicesInfo()
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 
 	var inativosString string
