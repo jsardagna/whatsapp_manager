@@ -55,11 +55,11 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		w.cmdGroupJUID = *cmd
 		group, err := w.Cli.JoinGroupWithLink(*cmd)
 		if err != nil { //caso de erro
-			println("ERRO", w.device.ID.User, err.Error())
 			gr, _ := w.Cli.GetGroupInfoFromLink(*cmd)
 			group = gr.JID
 		}
 		w.cmdGroupJUID = group.String()
+		println("GRUPO", w.device.ID.User, w.cmdGroupJUID)
 	} else {
 		x := "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp" //DIVULGAÇÃO3
 		group, _ := w.Cli.JoinGroupWithLink(x)
