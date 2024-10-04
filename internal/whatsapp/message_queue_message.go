@@ -164,7 +164,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 
 	if valid {
 
-		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		cctx, _ := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
 			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)
@@ -180,7 +180,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
 		case <-resp:
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
-			time.Sleep(time.Duration(5+rand.Intn(2)) * time.Second)
+			time.Sleep(time.Duration(4+rand.Intn(2)) * time.Second)
 		}
 	}
 }
