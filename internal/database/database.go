@@ -406,7 +406,7 @@ func (d *Database) RemoveDevice(juid string) error {
 
 func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
 	rows, err := d.Conn.Query(`
-		SELECT juid, coalesce(last_update,current_date), total_grupos
+		SELECT juid, coalesce(last_update,current_date), coalesce(total_grupos,0)
 		FROM config
 		WHERE active = true 
 		 and server = true
