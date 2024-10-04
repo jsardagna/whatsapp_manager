@@ -55,7 +55,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		w.cmdGroupJUID = *cmd
 		group, err := w.Cli.JoinGroupWithLink(*cmd)
 		if err != nil { //caso de erro
-			println(w.device.ID.User, err.Error)
+			println("ERRO", w.device.ID.User, err.Error())
 			gr, _ := w.Cli.GetGroupInfoFromLink(*cmd)
 			group = gr.JID
 		}
