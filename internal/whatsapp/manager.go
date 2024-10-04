@@ -152,26 +152,40 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 		return err.Error()
 	}
 
+	// Obter todos os dispositivos e criar um novo mapa com device.ID.User como chave
+	allDevices, err := m.getAllDevices()
+	if err != nil {
+		return err.Error()
+	}
+
+	// Mapa para armazenar os dispositivos baseados em device.ID.User
+	dispositivosMapa := make(map[string]*store.Device)
+	for _, device := range allDevices {
+		if device.ID != nil && device.ID.User != "" {
+			dispositivosMapa[device.ID.User] = device
+		}
+	}
+
 	var inativosString string
 
-	// Percorrer os dispositivos ativos e verificar contra os divulgadores
+	// Percorrer os dispositivos ativos e verificar contra o novo mapa de dispositivos
 	for _, activeDevice := range activeDevices {
-		divulgador, exists := m.divulgadores[activeDevice.JUID]
+		device, exists := dispositivosMapa[activeDevice.JUID]
 
-		// Se o divulgador não existir, ele está inativo
+		// Se o dispositivo não existir no mapa, ele está inativo
 		if !exists {
-			inativosString += fmt.Sprintf("%s \n",
-				activeDevice.JUID)
+			inativosString += fmt.Sprintf("%s \n", activeDevice.JUID)
 			continue
 		}
 
-		// Se o divulgador existir, verificar se está conectado e inicializado
-		if !divulgador.Connected || (divulgador.device != nil && !divulgador.device.Initialized) {
+		// Se o dispositivo existir, verificar se está conectado e inicializado
+		if device != nil && !device.Initialized {
 			inativosString += fmt.Sprintf("Divulgador Inativo: %s, Último Update: %s, Total de Grupos: %d\n",
 				activeDevice.JUID, activeDevice.LastUpdate.Format("2006-01-02 15:04:05"), activeDevice.TotalGrupos)
 		}
 	}
 
+	// Caso nenhum divulgador inativo seja encontrado
 	if inativosString == "" {
 		inativosString = "Nenhum divulgador inativo encontrado."
 	}

@@ -164,7 +164,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 
 	if valid {
 
-		cctx, _ := context.WithTimeout(context.Background(), 8*time.Second)
+		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
 			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)

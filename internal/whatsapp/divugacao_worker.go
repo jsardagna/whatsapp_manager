@@ -60,11 +60,11 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		}
 		w.cmdGroupJUID = group.String()
 	} else {
-		x := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" //DIVULGAÇÃO2
+		x := "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp" //DIVULGAÇÃO3
 		group, _ := w.Cli.JoinGroupWithLink(x)
 		w.db.InsertConfig(w.Cli.Store.ID.User, x)
 		w.cmdGroupJUID = group.String()
-		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp") //DIVULGAÇÃO3
+		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW") //DIVULGAÇÃO2
 		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8") //DIVULGAÇÃO
 	}
 	w.Connected = true

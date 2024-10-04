@@ -53,6 +53,11 @@ func (q *MessageQueue) EnqueueLink(db database.Database, ignore string, msg *waE
 // processStack processa a pilha de mensagens
 func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 	for {
+
+		if !w.estaAtivo() {
+			return
+		}
+
 		if len(queue.stack) > 0 {
 			request := queue.stack[0]
 			queue.stack = queue.stack[1:]
