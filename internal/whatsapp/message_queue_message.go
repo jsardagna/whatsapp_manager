@@ -23,7 +23,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 	cli := q.worker.Cli
 	groups, err := q.worker.findAllGroups()
 	if err != nil {
-		println("FALHA AO BUSCAR GRUPOS:", q.worker.device.ID.User)
+		fmt.Println("FALHA AO BUSCAR GRUPO 2: ", q.worker.Cli.Store.ID.User, err.Error())
 	} else {
 		for _, group := range groups {
 			if group.JID.String() == ignore ||
@@ -127,7 +127,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	groups, err := w.findAllGroups()
 
 	if err != nil {
-		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User)
+		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
 	} else {
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
