@@ -129,8 +129,13 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	if err != nil {
 		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
 	} else {
+		w.sending = true
+		startTime := time.Now()
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
+
+			elapsedTime := time.Since(startTime)
+			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(10)*time.Minute
 
 			if !w.estaAtivo() {
 				return
@@ -152,8 +157,13 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				q.sendMessages(kind, group, uploaded, data, msg, ddd)
 			}
 
+			if remainingTime <= 0 {
+				break
+			}
 		}
+		w.sending = false
 	}
+
 }
 
 func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {

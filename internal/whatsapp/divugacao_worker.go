@@ -22,6 +22,7 @@ type DivulgacaoWorker struct {
 	Connected    bool
 	queueN       *MessageQueue
 	queueAll     *MessageQueue
+	sending      bool
 }
 
 func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, db database.Database) *DivulgacaoWorker {

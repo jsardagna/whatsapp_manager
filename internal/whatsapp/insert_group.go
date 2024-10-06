@@ -60,7 +60,7 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 	}
 	total := 0
 	for {
-		if !w.estaAtivo() {
+		if !w.estaAtivo() || w.sending {
 			return
 		}
 		// Comece uma transação para selecionar e travar os próximos 10 registros
