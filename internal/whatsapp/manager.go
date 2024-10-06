@@ -52,11 +52,13 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 
 	go func() {
 
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Printf("Recuperado de um panic: %v\n", r)
-			}
-		}()
+		/*
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("Recuperado de um panic: %v\n", r)
+				}
+			}()
+		*/
 
 		worker.Start(qrCodeChan)
 	}()
