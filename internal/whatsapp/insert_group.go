@@ -61,6 +61,7 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 	total := 0
 	for {
 		if !w.estaAtivo() || w.sending {
+			time.Sleep(time.Duration(5 * time.Second))
 			return
 		}
 		// Comece uma transação para selecionar e travar os próximos 10 registros
