@@ -138,7 +138,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(10)*time.Minute
 
 			if !w.estaAtivo() {
-				return
+				break
 			}
 
 			if group.JID.String() == ignore ||
