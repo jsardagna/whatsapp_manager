@@ -61,12 +61,20 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		w.cmdGroupJUID = group.String()
 		println("GRUPO", w.device.ID.User, w.cmdGroupJUID)
 	} else {
-		x := "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp" //DIVULGAÇÃO3
-		group, _ := w.Cli.JoinGroupWithLink(x)
-		w.db.InsertConfig(w.Cli.Store.ID.User, x)
-		w.cmdGroupJUID = group.String()
-		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW") //DIVULGAÇÃO2
-		w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8") //DIVULGAÇÃO
+		DIVULGACAO1 := "https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8"
+		DIVULGAÇÃO2 := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
+		DIVULGAÇÃO3 := "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp"
+
+		group, err := w.Cli.JoinGroupWithLink(DIVULGAÇÃO2)
+		if err == nil {
+			w.db.InsertConfig(w.Cli.Store.ID.User, DIVULGAÇÃO2)
+			w.cmdGroupJUID = group.String()
+			w.Cli.JoinGroupWithLink(DIVULGAÇÃO3) //DIVULGAÇÃO3
+			w.Cli.JoinGroupWithLink(DIVULGACAO1) //DIVULGAÇÃO
+		} else { //MANTÉM NO 1
+			w.Cli.JoinGroupWithLink(DIVULGACAO1) //DIVULGAÇÃO
+		}
+
 	}
 	w.Connected = true
 	return nil
