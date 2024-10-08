@@ -52,12 +52,7 @@ func (w *DivulgacaoWorker) joininvitelink(link string) (types.JID, error) {
 
 func (w *DivulgacaoWorker) insertNewGroups() {
 
-	groups, _ := w.findAllGroups()
-	totalGrupos := len(groups)
-	if totalGrupos > 300 {
-		w.db.UpdateConfig(w.Cli.Store.ID.User, "Acima de 300", totalGrupos)
-		return
-	}
+	totalGrupos := 0
 	total := 0
 	for {
 		if !w.estaAtivo() || w.sending {

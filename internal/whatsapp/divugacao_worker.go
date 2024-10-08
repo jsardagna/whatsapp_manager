@@ -47,8 +47,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	go w.inicializaFila()
 	w.Cli.RemoveEventHandlers()
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
-	groups, _ := w.findAllGroups()
-	println("CELULAR:", w.Cli.Store.ID.User, " GRUPOS:", len(groups))
+	println("CELULAR:", w.Cli.Store.ID.User)
 	go w.monitorInsert(w.Cli.Store.ID.User)
 	w.m.divulgadores[w.device.ID.User] = w
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
