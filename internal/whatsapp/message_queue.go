@@ -30,9 +30,10 @@ type messageRequest struct {
 // NewMessageQueue inicializa uma nova fila de mensagens
 func (w *DivulgacaoWorker) NewMessageQueue(intervalo time.Duration) *MessageQueue {
 	return &MessageQueue{
-		stack:     make([]messageRequest, 0),
-		intervalo: intervalo,
-		worker:    w,
+		stack:              make([]messageRequest, 0),
+		intervalo:          intervalo,
+		worker:             w,
+		alreadyCalledGroup: make(map[string]bool),
 	}
 }
 
