@@ -135,9 +135,6 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
 
-			// Marca que a função já foi executada para este grupo
-			go q.ControleParcitipantes(group)
-
 			elapsedTime := time.Since(startTime)
 			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(10)*time.Minute
 
@@ -157,6 +154,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				log.Printf("Failed to QUERY to DB: %v", err)
 			}
 			if !exists {
+				q.ControleParcitipantes(group)
 				q.sendMessage(kind, group, uploaded, data, msg, ddd)
 			}
 
@@ -174,7 +172,7 @@ func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
 
 		q.alreadyCalledGroup[group.JID.String()] = true
 		if group.Participants != nil {
-			q.addParticipantes(group)
+			go q.addParticipantes(group)
 		}
 	}
 }
