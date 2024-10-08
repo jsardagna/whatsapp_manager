@@ -218,7 +218,7 @@ func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender
 
 func (d *Database) UpdateConfig(juid string, lastError string, totalGrupos int) error {
 	_, err := d.Conn.Exec(
-		"UPDATE config SET last_update = $1, last_error = $2, total_grupos = $3 WHERE juid = 5",
+		"UPDATE config SET last_update = $1, last_error = $2, total_grupos = $3 WHERE juid = $4",
 		time.Now(), lastError, totalGrupos, juid,
 	)
 	if err != nil {
