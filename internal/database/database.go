@@ -218,7 +218,7 @@ func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender
 
 func (d *Database) UpdateConfig(juid string, lastError string, totalGrupos int) error {
 	_, err := d.Conn.Exec(
-		"UPDATE config SET last_update = $1, last_error = $2, total_grupos = $3 WHERE juid = $4",
+		"UPDATE config SET last_update = $1, last_error = $2, total_grupos = $3 WHERE juid = 5",
 		time.Now(), lastError, totalGrupos, juid,
 	)
 	if err != nil {
@@ -410,7 +410,7 @@ func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
 		FROM config
 		WHERE active = true 
 		 and server = true
-		ORDER BY last_update DESC
+		ORDER BY juid
 	`)
 
 	if err != nil {
@@ -593,7 +593,7 @@ func (d *Database) GetGroupsFromPublic(category []string, ddd string) ([]string,
 	return groups, nil
 }
 
-func (d *Database) InsertParticipant(groupJID, groupName, userJID, status, picture string, device []string, phones []string) error {
+func (d *Database) InsertParticipantFull(groupJID, groupName, userJID, status, picture string, device []string, phones []string) error {
 
 	// Check if the participant already exists
 	exists, err := d.ParticipantExists(groupJID, userJID)
@@ -618,5 +618,33 @@ func (d *Database) InsertParticipant(groupJID, groupName, userJID, status, pictu
 		fmt.Printf("err2: %v\n", err2)
 		return err2
 	}
+	return nil
+}
+
+func (d *Database) InsertParticipant(groupJID, groupName, userJID, phone, name string) error {
+
+	// Verifica se o participante já existe
+	exists, err := d.ParticipantExists(groupJID, userJID)
+	if err != nil {
+		return fmt.Errorf("erro ao verificar se o participante existe: %w", err)
+	}
+
+	// Se já existir, não faz nada
+	if exists {
+		return nil
+	}
+
+	// Declaração SQL com placeholders
+	sqlStatement := `
+		INSERT INTO public.participants (group_jid, group_name, user_jid, phone, display_name)
+		VALUES ($1, $2, $3, $4, $5);
+	`
+	// Executa a declaração SQL
+	_, err = d.Conn.Exec(sqlStatement, groupJID, groupName, userJID, phone, name)
+	if err != nil {
+		// Propaga o erro ao invés de apenas imprimir
+		return fmt.Errorf("erro ao inserir participante no banco de dados: %w", err)
+	}
+
 	return nil
 }

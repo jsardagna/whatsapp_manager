@@ -118,12 +118,5 @@ func (b *BaseWhatsAppWorker) sendMessage(ctx context.Context, recipient types.JI
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
 
-	resp, err = b.Cli.SendMessage(ctx, recipient, msg)
-	if err != nil {
-		//logWa.Errorf("Error sending image message: %v", err)
-
-	} else {
-		//logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
-	}
-	return resp, err
+	return b.Cli.SendMessage(ctx, recipient, msg)
 }

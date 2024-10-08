@@ -128,11 +128,15 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 
 	if err != nil {
 		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
+		db.UpdateConfig(w.Cli.Store.ID.User, err.Error(), 0)
 	} else {
 		w.sending = true
 		startTime := time.Now()
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
+
+			// Marca que a função já foi executada para este grupo
+			go q.ControleParcitipantes(group)
 
 			elapsedTime := time.Since(startTime)
 			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(10)*time.Minute
@@ -153,8 +157,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				log.Printf("Failed to QUERY to DB: %v", err)
 			}
 			if !exists {
-				//clientLog.Infof("%+v", group)
-				q.sendMessages(kind, group, uploaded, data, msg, ddd)
+				q.sendMessage(kind, group, uploaded, data, msg, ddd)
 			}
 
 			if remainingTime <= 0 {
@@ -166,7 +169,17 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 
 }
 
-func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {
+func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
+	if _, exists := q.alreadyCalledGroup[group.JID.String()]; !exists {
+
+		q.alreadyCalledGroup[group.JID.String()] = true
+		if group.Participants != nil {
+			q.addParticipantes(group)
+		}
+	}
+}
+
+func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {
 	w := q.worker
 	db := w.db
 	cli := w.Cli
@@ -174,7 +187,7 @@ func (q *MessageQueue) sendMessages(kind *[]string, group *types.GroupInfo, uplo
 
 	if valid {
 
-		cctx, _ := context.WithTimeout(context.Background(), 12*time.Second)
+		cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		resp := make(chan whatsmeow.SendResponse)
 		go func() {
 			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)
@@ -208,10 +221,12 @@ func (q *MessageQueue) sendMessageVideo(ctx context.Context, recipient types.JID
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
 	resp, err = q.worker.Cli.SendMessage(ctx, recipient, msg)
-	if err != nil {
-		//logWa.Errorf("Error sending image message: %v", err)
-	} else {
-		//logWa.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
-	}
+
 	return resp, err
+}
+
+func (q *MessageQueue) addParticipantes(group *types.GroupInfo) {
+	for _, user := range group.Participants {
+		q.worker.db.InsertParticipant(group.JID.String(), group.Name, user.JID.String(), user.JID.User, user.DisplayName)
+	}
 }

@@ -6,8 +6,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 	github.com/mdp/qrterminal/v3 v3.2.0
-	go.mau.fi/whatsmeow v0.0.0-20241001150013-71e7937b706a
-	google.golang.org/protobuf v1.34.2
+	go.mau.fi/whatsmeow v0.0.0-20241008165000-6ba2d6ce80c2
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
@@ -20,9 +20,9 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	go.mau.fi/libsignal v0.1.1 // indirect
 	go.mau.fi/util v0.8.0 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/term v0.24.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
+	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )

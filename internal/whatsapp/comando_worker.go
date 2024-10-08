@@ -36,18 +36,7 @@ func (w *ComandoWorker) inicializaCommando() error {
 	if w.Cli.Store != nil && w.Cli.Store.ID != nil {
 		w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	}
-
-	log.Printf("Dispositivo %s conectado com sucesso!", w.device.ID)
-	/*
-		grupos, _ := w.Cli.GetJoinedGroups()
-
-		// Percorrendo a lista de grupos usando o loop for-range
-		for _, grupo := range grupos {
-			// Aqui você pode processar cada grupo individualmente
-			fmt.Printf("grupo.JID: %v\n", grupo.JID)
-			fmt.Printf("grupo.Name: %v\n", grupo.Name)
-		}
-	*/
+	w.enviarTextoDirect("SERVIDOR REINICIADO...", parseJID(w.cmdGroupJUID))
 	return nil
 }
 
@@ -99,9 +88,13 @@ func (w *ComandoWorker) sendImage(recipient types.JID, data []byte) {
 	w.sendMessage(context.Background(), recipient, uploaded, data, "")
 }
 
-func (w *ComandoWorker) enviarTexto(message string, evt *events.Message) {
+func (w *ComandoWorker) enviarTextoDirect(message string, jid types.JID) {
 	msg := &waE2E.Message{Conversation: proto.String(message)}
-	w.Cli.SendMessage(context.Background(), evt.Info.Chat, msg)
+	w.Cli.SendMessage(context.Background(), jid, msg)
+}
+
+func (w *ComandoWorker) enviarTexto(message string, evt *events.Message) {
+	w.enviarTextoDirect(message, evt.Info.Chat)
 }
 
 func ExtrairNumero(input string) (string, error) {

@@ -9,9 +9,10 @@ import (
 
 // MessageQueue representa a fila de mensagens
 type MessageQueue struct {
-	worker    *DivulgacaoWorker
-	stack     []messageRequest
-	intervalo time.Duration
+	worker             *DivulgacaoWorker
+	stack              []messageRequest
+	intervalo          time.Duration
+	alreadyCalledGroup map[string]bool
 }
 
 // messageRequest representa uma solicitação para enviar mensagens
