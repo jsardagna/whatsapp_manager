@@ -375,6 +375,7 @@ type DeviceInfo struct {
 	JUID        string
 	LastUpdate  time.Time
 	TotalGrupos int
+	Local       string
 }
 
 func (d *Database) RemoveDevice(juid string) error {
@@ -406,7 +407,7 @@ func (d *Database) RemoveDevice(juid string) error {
 
 func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
 	rows, err := d.Conn.Query(`
-		SELECT juid, coalesce(last_update,current_date), coalesce(total_grupos,0)
+		SELECT juid, coalesce(last_update,current_date), coalesce(total_grupos,0), coalesce(local,'SN')
 		FROM config
 		WHERE active = true 
 		 and server = true
@@ -421,7 +422,7 @@ func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
 	var devicesInfo []DeviceInfo
 	for rows.Next() {
 		var deviceInfo DeviceInfo
-		if err := rows.Scan(&deviceInfo.JUID, &deviceInfo.LastUpdate, &deviceInfo.TotalGrupos); err != nil {
+		if err := rows.Scan(&deviceInfo.JUID, &deviceInfo.LastUpdate, &deviceInfo.TotalGrupos, &deviceInfo.Local); err != nil {
 			return nil, err
 		}
 		devicesInfo = append(devicesInfo, deviceInfo)

@@ -179,7 +179,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 		// Se o dispositivo não existir no mapa, ele está inativo
 		if !exists {
 			total++
-			inativosString += fmt.Sprintf("%s \n", activeDevice.JUID)
+			inativosString += fmt.Sprintf("%s - %s \n", activeDevice.Local, activeDevice.JUID)
 			continue
 		}
 
