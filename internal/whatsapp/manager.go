@@ -193,7 +193,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 
 	// Caso nenhum divulgador inativo seja encontrado
 	if inativosString != "" {
-		return fmt.Sprintf("TOTAL INATIVOS: %d\n```-------------------```\n%s```---------------```", total, inativosString)
+		return fmt.Sprintf("TOTAL INATIVOS: %d\n```-------------------```\n%s```-------------------```", total, inativosString)
 	}
 	return "Nenhum divulgador inativo encontrado."
 }

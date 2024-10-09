@@ -94,7 +94,7 @@ func main() {
 // Função para capturar e registrar o erro no arquivo de log
 func logErrorToFile(r interface{}) {
 	// Abrir ou criar o arquivo de log (somente erros serão registrados aqui)
-	file, err := os.OpenFile("panic-error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile("/home/ec2-user/panic-error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println("Erro ao abrir arquivo de log:", err)
 		return
