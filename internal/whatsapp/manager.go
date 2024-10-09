@@ -179,7 +179,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 		// Se o dispositivo não existir no mapa, ele está inativo
 		if !exists {
 			total++
-			inativosString += fmt.Sprintf("%s - %s \n", activeDevice.Local, activeDevice.JUID)
+			inativosString += fmt.Sprintf("```%s - %s```\n", activeDevice.Local, activeDevice.JUID)
 			continue
 		}
 
@@ -193,7 +193,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 
 	// Caso nenhum divulgador inativo seja encontrado
 	if inativosString != "" {
-		return fmt.Sprintf("TOTAL INATIVOS: %d \n %s", total, inativosString)
+		return fmt.Sprintf("TOTAL INATIVOS: %d\n```-------------------```\n%s```---------------```", total, inativosString)
 	}
 	return "Nenhum divulgador inativo encontrado."
 }
@@ -209,13 +209,13 @@ func (m *WhatsAppManager) ListarDivulgadoresAtivos() string {
 
 			// Verificar se o dispositivo está inicializado e listar o ID
 			if divulgador.device != nil && divulgador.device.ID != nil {
-				resultado += fmt.Sprintf("%s \n", nome)
+				resultado += fmt.Sprintf("```%s```\n", nome)
 				total++
 			}
 		}
 	}
 
-	return fmt.Sprintf("TOTAL ATIVOS: %d \n %s", total, resultado)
+	return fmt.Sprintf("TOTAL ATIVOS: %d \n%s", total, resultado)
 }
 
 func parseJID(arg string) types.JID {
