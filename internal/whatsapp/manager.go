@@ -137,7 +137,7 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	store.DeviceProps.Os = proto.String("Google Chrome")
 	store.DeviceProps.RequireFullSync = proto.Bool(false)
 	db, err := sql.Open(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"))
-	db.SetMaxOpenConns(5)
+	db.SetMaxOpenConns(10)
 	if err != nil {
 		return nil, err
 	}
