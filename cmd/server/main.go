@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 	"time"
 	"whatsapp-manager/internal/config"
@@ -27,6 +29,13 @@ func init() {
 }
 
 func main() {
+
+	// Captura o panic e registra no arquivo de log
+	defer func() {
+		if r := recover(); r != nil {
+			logErrorToFile(r)
+		}
+	}()
 
 	// Criar um contexto que será cancelado quando o programa receber um sinal de término (Ctrl+C)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -80,4 +89,22 @@ func main() {
 	// Adicionar qualquer outra limpeza necessária (fechar conexões, encerrar goroutines, etc.)
 	time.Sleep(1 * time.Second) // Simular uma tarefa de limpeza
 	log.Println("Aplicação finalizada com sucesso.")
+}
+
+// Função para capturar e registrar o erro no arquivo de log
+func logErrorToFile(r interface{}) {
+	// Abrir ou criar o arquivo de log (somente erros serão registrados aqui)
+	file, err := os.OpenFile("panic-error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		fmt.Println("Erro ao abrir arquivo de log:", err)
+		return
+	}
+	defer file.Close()
+
+	// Cria um logger que escreve no arquivo
+	logger := log.New(file, "PANIC: ", log.LstdFlags)
+
+	// Registra a mensagem do panic e o stack trace
+	logger.Printf("Panic occurred: %v\n", r)
+	logger.Printf("Stack Trace:\n%s\n", debug.Stack())
 }
