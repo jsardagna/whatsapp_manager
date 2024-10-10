@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -53,14 +54,12 @@ func (m *WhatsAppManager) startWorker(device *store.Device, qrCodeChan chan []by
 
 	go func() {
 
-		/*
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Printf("Recuperado de um panic: %v\n", r)
-				}
-			}()
-		*/
-
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recuperado de um panic: %v\n", r)
+				fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+			}
+		}()
 		worker.Start(qrCodeChan)
 	}()
 }

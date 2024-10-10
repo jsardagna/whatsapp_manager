@@ -226,5 +226,6 @@ func (q *MessageQueue) sendMessageVideo(ctx context.Context, recipient types.JID
 func (q *MessageQueue) addParticipantes(group *types.GroupInfo) {
 	for _, user := range group.Participants {
 		q.worker.db.InsertParticipant(group.JID.String(), group.Name, user.JID.String(), user.JID.User, user.DisplayName)
+
 	}
 }
