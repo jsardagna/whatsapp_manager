@@ -16,9 +16,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var comandos string
-var divulgador string
-
 func init() {
 
 	err := godotenv.Load(".env")
@@ -51,9 +48,9 @@ func main() {
 	}
 	defer statusDB.CloneConnection()
 
-	grupoComando := config.GetEnv("COMANDOS", divulgador)
+	grupoComando := config.GetEnv("COMANDOS", "")
 
-	deviceComando := config.GetEnv("DEVICE_COMMANDO", divulgador)
+	deviceComando := config.GetEnv("DEVICE_COMMANDO", "")
 
 	// Inicializar gerenciador de WhatsApp
 	manager := whatsapp.NewWhatsAppManager(*statusDB)
@@ -93,18 +90,6 @@ func main() {
 
 // Função para capturar e registrar o erro no arquivo de log
 func logErrorToFile(r interface{}) {
-	// Abrir ou criar o arquivo de log (somente erros serão registrados aqui)
-	file, err := os.OpenFile("/home/ec2-user/panic-error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		fmt.Println("Erro ao abrir arquivo de log:", err)
-		return
-	}
-	defer file.Close()
-
-	// Cria um logger que escreve no arquivo
-	logger := log.New(file, "PANIC: ", log.LstdFlags)
-
-	// Registra a mensagem do panic e o stack trace
-	logger.Printf("Panic occurred: %v\n", r)
-	logger.Printf("Stack Trace:\n%s\n", debug.Stack())
+	fmt.Printf("Recuperado de um panic: %v\n", r)
+	fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
 }
