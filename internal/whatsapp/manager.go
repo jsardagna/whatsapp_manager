@@ -43,7 +43,17 @@ func (m *WhatsAppManager) StartComando(grupoComando string, deviceComando string
 		device = m.storeContainer.NewDevice()
 	}
 	c := NewComandoWorker(m, device, grupoComando, m.db)
-	go c.Start()
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recuperado de um panic: %v\n", r)
+				fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+				LogErrorToFile(r)
+			}
+		}()
+
+		c.Start()
+	}()
 	return nil
 }
 

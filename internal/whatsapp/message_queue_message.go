@@ -193,9 +193,9 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			fmt.Println(q.worker.Cli.Store.ID.User, err)
 			go db.CreateGroup(group.JID, group.Name, nil, w.Cli.Store.ID.User, msg, err)
 		}
-		suucess := w.sendImage(group.JID, uploaded, data, msg, onSuccess, onError)
-		if suucess {
-			time.Sleep(time.Duration(4+rand.Intn(2)) * time.Second)
+		success := w.sendImage(group.JID, uploaded, data, msg, onSuccess, onError)
+		if success {
+			time.Sleep(time.Duration(10+rand.Intn(2)) * time.Second)
 		}
 	}
 }

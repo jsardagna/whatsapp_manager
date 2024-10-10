@@ -3,8 +3,10 @@ package whatsapp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"whatsapp-manager/internal/database"
 
@@ -27,6 +29,13 @@ func NewComandoWorker(m *WhatsAppManager, device *store.Device, cmdGroupJUID str
 
 func (w *ComandoWorker) Start() error {
 	onComplete := func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recuperado de um panic: %v\n", r)
+				fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+				LogErrorToFile(r)
+			}
+		}()
 		w.inicializaCommando()
 	}
 	return w.Connect(nil, onComplete)

@@ -86,6 +86,7 @@ func main() {
 	// Adicionar qualquer outra limpeza necessária (fechar conexões, encerrar goroutines, etc.)
 	time.Sleep(1 * time.Second) // Simular uma tarefa de limpeza
 	log.Println("Aplicação finalizada com sucesso.")
+	select {}
 }
 
 // Função para capturar e registrar o erro no arquivo de log
