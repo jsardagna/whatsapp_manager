@@ -180,27 +180,21 @@ func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
 func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {
 	w := q.worker
 	db := w.db
-	cli := w.Cli
+
 	valid := kind == nil || db.ValidGroupKind(group.JID, *kind, ddd)
 
 	if valid {
-
-		cctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
-		resp := make(chan whatsmeow.SendResponse)
-		go func() {
-			r, err2 := w.sendMessage(cctx, group.JID, uploaded, data, msg)
-			if !w.estaAtivo() {
-				return
-			}
-			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, err2)
-			resp <- r
-		}()
-		select {
-		case <-cctx.Done():
-			fmt.Println(q.worker.Cli.Store.ID.User, cctx.Err())
-			go db.CreateGroup(group.JID, group.Name, nil, cli.Store.ID.User, msg, cctx.Err())
-		case <-resp:
+		onSuccess := func() {
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
+			go db.CreateGroup(group.JID, group.Name, nil, w.Cli.Store.ID.User, msg, nil)
+		}
+
+		onError := func(err error) {
+			fmt.Println(q.worker.Cli.Store.ID.User, err)
+			go db.CreateGroup(group.JID, group.Name, nil, w.Cli.Store.ID.User, msg, err)
+		}
+		suucess := w.sendImage(group.JID, uploaded, data, msg, onSuccess, onError)
+		if suucess {
 			time.Sleep(time.Duration(4+rand.Intn(2)) * time.Second)
 		}
 	}

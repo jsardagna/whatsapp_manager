@@ -3,10 +3,14 @@ package whatsapp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 	"whatsapp-manager/internal/database"
 
+	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
@@ -23,6 +27,7 @@ type DivulgacaoWorker struct {
 	queueN       *MessageQueue
 	queueAll     *MessageQueue
 	sending      bool
+	mu           sync.Mutex
 }
 
 func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, db database.Database) *DivulgacaoWorker {
@@ -49,7 +54,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	println("CELULAR:", w.Cli.Store.ID.User)
 	go w.monitorInsert(w.Cli.Store.ID.User)
-	w.m.divulgadores[w.device.ID.User] = w
+	w.Manager.divulgadores[w.device.ID.User] = w
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
 		w.cmdGroupJUID = *cmd
@@ -78,14 +83,6 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	}
 	w.Connected = true
 	return nil
-}
-
-func (w *DivulgacaoWorker) estaAtivo() bool {
-	if w.Cli == nil || w.Cli.Store == nil || w.Cli.Store.ID == nil {
-		w.Connected = false
-		return false
-	}
-	return true
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {
@@ -217,10 +214,7 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 func (w *DivulgacaoWorker) enviarTexto(cmd string, total int, evt *events.Message) {
 	msg := &waE2E.Message{Conversation: proto.String(fmt.Sprintf("Aguardando MSG, Fila: %s na espera: %d", cmd, total))}
 	println("enviando texto..", *msg.Conversation)
-	_, err := w.Cli.SendMessage(context.Background(), evt.Info.Chat, msg)
-	if err != nil {
-		println("erro ", err.Error())
-	}
+	w.internMessage(evt.Info.Chat, msg, func() {}, func(error) {})
 }
 
 func (w *DivulgacaoWorker) verifyAndInsertGroupTelegram(msg string, evt *events.Message) {
@@ -322,4 +316,66 @@ func extractPartsAndNumbers(s string) (*[]string, *[]string) {
 	}
 	// Retorna nil se não encontrar o padrão desejado
 	return nil, nil
+}
+
+func (w *DivulgacaoWorker) estaAtivo() bool {
+	if w.Cli == nil || w.Cli.Store == nil || w.Cli.Store.ID == nil {
+		w.Connected = false
+		return false
+	}
+	return true
+}
+
+// Função final com Mutex
+func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message, onSuccess func(), onError func(error)) bool {
+	// Garantindo acesso exclusivo usando Mutex
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	cctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	resp := make(chan whatsmeow.SendResponse)
+	errChan := make(chan error)
+
+	// Goroutine para envio de mensagem
+	go func() {
+		r, err := w.Cli.SendMessage(cctx, recipient, msg)
+		if err != nil {
+			errChan <- err // Envia erro no canal de erro
+		} else {
+			resp <- r // Envia sucesso no canal de resposta
+		}
+	}()
+
+	select {
+	case <-cctx.Done():
+		// Se o contexto expirar
+		onError(cctx.Err())
+		return false
+	case err := <-errChan:
+		// Se houver erro durante o envio
+		onError(err)
+		return false
+	case <-resp:
+		// Operação de sucesso
+		onSuccess()
+		return true
+	}
+}
+
+func (w *DivulgacaoWorker) sendImage(recipient types.JID, uploaded whatsmeow.UploadResponse, data []byte, caption string, onSuccess func(), onError func(error)) bool {
+
+	msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
+		Caption:       proto.String(caption),
+		URL:           proto.String(uploaded.URL),
+		DirectPath:    proto.String(uploaded.DirectPath),
+		MediaKey:      uploaded.MediaKey,
+		Mimetype:      proto.String(http.DetectContentType(data)),
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+	}}
+
+	return w.internMessage(recipient, msg, onSuccess, onError)
 }

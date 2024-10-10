@@ -54,13 +54,13 @@ func (w *ComandoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 						cmd = *evt.Message.Conversation
 					}
 					if strings.Contains(strings.ToLower(cmd), "list") {
-						w.enviarTexto(w.m.ListarDivulgadoresAtivos(), evt)
+						w.enviarTexto(w.Manager.ListarDivulgadoresAtivos(), evt)
 					}
 					if strings.Contains(strings.ToLower(cmd), "off") {
-						w.enviarTexto(w.m.ListarDivulgadoresInativos(), evt)
+						w.enviarTexto(w.Manager.ListarDivulgadoresInativos(), evt)
 					}
 					if strings.Contains(strings.ToLower(cmd), "add") {
-						qrcod, err := w.m.AddnewDevice()
+						qrcod, err := w.Manager.AddnewDevice()
 						if err != nil {
 							w.enviarTexto(err.Error(), evt)
 						} else {
@@ -70,7 +70,7 @@ func (w *ComandoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 					if strings.Contains(strings.ToLower(cmd), "r-") {
 						juid, err := ExtrairNumero(cmd)
 						if err == nil {
-							w.m.db.RemoveDevice(juid)
+							w.Manager.db.RemoveDevice(juid)
 						}
 					}
 				}

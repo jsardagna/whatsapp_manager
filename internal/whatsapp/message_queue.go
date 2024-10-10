@@ -72,6 +72,7 @@ func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 						if r := recover(); r != nil {
 							fmt.Printf("Recuperado de um panic: %v\n", r)
 							fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+							LogErrorToFile(r)
 						}
 					}()
 					queue.sendAllMessages(request.ignore, *request.data, *request.text, request.kind, request.ddd)

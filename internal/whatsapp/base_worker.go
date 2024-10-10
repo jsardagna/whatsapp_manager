@@ -20,14 +20,14 @@ import (
 )
 
 type BaseWhatsAppWorker struct {
-	device *store.Device
-	Cli    *whatsmeow.Client
-	db     database.Database
-	m      *WhatsAppManager
+	device  *store.Device
+	Cli     *whatsmeow.Client
+	db      database.Database
+	Manager *WhatsAppManager
 }
 
 func NewBaseWhatsAppWorker(m *WhatsAppManager, device *store.Device, db database.Database) *BaseWhatsAppWorker {
-	return &BaseWhatsAppWorker{m: m, device: device, db: db}
+	return &BaseWhatsAppWorker{Manager: m, device: device, db: db}
 }
 
 func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte, onComplete func()) error {
