@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -328,6 +329,10 @@ func (w *DivulgacaoWorker) estaAtivo() bool {
 
 // Função final com Mutex
 func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message, onSuccess func(), onError func(error)) bool {
+
+	if !w.estaAtivo() {
+		return false
+	}
 	// Garantindo acesso exclusivo usando Mutex
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -339,7 +344,17 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 	errChan := make(chan error)
 
 	// Goroutine para envio de mensagem
+
 	go func() {
+
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Erro ao enviar MSG: %v\n", r)
+				fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+				LogErrorToFile(r)
+			}
+		}()
+
 		r, err := w.Cli.SendMessage(cctx, recipient, msg)
 		if err != nil {
 			errChan <- err // Envia erro no canal de erro
@@ -347,7 +362,6 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 			resp <- r // Envia sucesso no canal de resposta
 		}
 	}()
-
 	select {
 	case <-cctx.Done():
 		// Se o contexto expirar
