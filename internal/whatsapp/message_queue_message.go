@@ -154,7 +154,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				log.Printf("Failed to QUERY to DB: %v", err)
 			}
 			if !exists {
-				q.ControleParcitipantes(group)
+				//q.ControleParcitipantes(group)
 				q.sendMessage(kind, group, uploaded, data, msg, ddd)
 			}
 
