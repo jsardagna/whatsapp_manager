@@ -349,7 +349,11 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Erro ao enviar MSG: %v\n", r)
+				if w.Cli.Store != nil && w.Cli.Store.ID != nil {
+					println(w.Cli.Store.ID, "Erro ao enviar MSG", r)
+				} else {
+					println(w.Cli.Store.ID, "Celular Perdido", r)
+				}
 				fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
 				LogErrorToFile(r)
 			}
