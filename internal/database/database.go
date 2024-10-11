@@ -361,6 +361,28 @@ func (d *Database) InsertGroupFone(cli *whatsmeow.Client, group *types.GroupInfo
 	}
 }
 
+func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupInfo) {
+
+	// Variáveis para armazenar os resultados da consulta
+	var leave bool
+
+	// Verifica se o grupo já tem a flag "leave = true"
+	err := d.Conn.QueryRow("SELECT leave FROM groups_phone WHERE jid=$1 LIMIT 1", group.JID).Scan(&leave)
+	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
+			// Se não há registro do grupo, simplesmente retorna
+			return
+		}
+		log.Printf("Falha ao verificar grupo: %v", err)
+		return
+	}
+
+	// Se o grupo tem a flag leave = true, ou tem menos de 2 participantes, deixa o grupo
+	if leave || (group.Participants != nil && len(group.Participants) < 2) {
+		cli.LeaveGroup(group.JID)
+	}
+}
+
 func (d *Database) InsertMessage(message Message) error {
 	_, err := d.Conn.Exec("INSERT INTO messages (uuid, juid, chat, name, message) VALUES ($1, $2, $3, $4, $5)",
 		message.UUID, message.JUID, message.Chat, message.Name, message.Message)
@@ -645,6 +667,25 @@ func (d *Database) InsertParticipant(groupJID, groupName, userJID, phone, name s
 	if err != nil {
 		// Propaga o erro ao invés de apenas imprimir
 		return fmt.Errorf("erro ao inserir participante no banco de dados: %w", err)
+	}
+
+	return nil
+}
+
+// Função para atualizar o total de participantes de um grupo
+func (d *Database) UpdateParticipants(groupJID string, totalParticipants int) error {
+	// Declaração SQL de UPDATE
+	sqlStatement := `
+		UPDATE groups 
+		SET participants = $1 
+		WHERE jid = $2;
+	`
+
+	// Executa a declaração SQL com os valores fornecidos
+	_, err := d.Conn.Exec(sqlStatement, totalParticipants, groupJID)
+	if err != nil {
+		// Propaga o erro ao invés de apenas imprimir
+		return fmt.Errorf("erro ao atualizar o total de participantes no grupo: %w", err)
 	}
 
 	return nil

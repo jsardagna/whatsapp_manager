@@ -3,6 +3,7 @@ package whatsapp
 import (
 	"fmt"
 	"runtime/debug"
+	"sync"
 	"time"
 	"whatsapp-manager/internal/database"
 
@@ -15,6 +16,7 @@ type MessageQueue struct {
 	stack              []messageRequest
 	intervalo          time.Duration
 	alreadyCalledGroup map[string]bool
+	mu                 sync.Mutex
 }
 
 // messageRequest representa uma solicitação para enviar mensagens

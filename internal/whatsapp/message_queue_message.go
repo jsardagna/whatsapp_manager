@@ -6,6 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow"
@@ -154,7 +156,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				log.Printf("Failed to QUERY to DB: %v", err)
 			}
 			if !exists {
-				//q.ControleParcitipantes(group)
+				q.ControleParcitipantes(group)
 				q.sendMessage(kind, group, uploaded, data, msg, ddd)
 			}
 
@@ -168,12 +170,21 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 }
 
 func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
+	q.mu.Lock() // Bloqueia o mapa para garantir segurança em ambiente concorrente
 	if _, exists := q.alreadyCalledGroup[group.JID.String()]; !exists {
-
 		q.alreadyCalledGroup[group.JID.String()] = true
-		if group.Participants != nil {
-			go q.addParticipantes(group)
+		q.mu.Unlock() // Desbloqueia após a escrita no mapa
+
+		if group.Participants != nil && len(group.Participants) > 0 { // Garante que há participantes
+			go func(groupJID string, participantsCount int) {
+				err := q.worker.db.UpdateParticipants(groupJID, participantsCount)
+				if err != nil {
+					log.Printf("Erro ao atualizar participantes para o grupo %s: %v", groupJID, err)
+				}
+			}(group.JID.String(), len(group.Participants))
 		}
+	} else {
+		q.mu.Unlock() // Desbloqueia se o grupo já foi processado
 	}
 }
 
@@ -184,19 +195,21 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 	valid := kind == nil || db.ValidGroupKind(group.JID, *kind, ddd)
 
 	if valid {
+		modifiedMessage, groupCode := addGroupIDToURLs(msg)
+
 		onSuccess := func() {
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
-			go db.CreateGroup(group.JID, group.Name, nil, w.Cli.Store.ID.User, msg, nil)
+			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil)
 		}
 
 		onError := func(err error) {
 			fmt.Println(q.worker.Cli.Store.ID.User, err)
-			go db.CreateGroup(group.JID, group.Name, nil, w.Cli.Store.ID.User, msg, err)
+			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err)
+			go db.VerifyToLeaveGroup(w.Cli, group)
 		}
-		success := w.sendImage(group.JID, uploaded, data, msg, onSuccess, onError)
-		if success {
-			time.Sleep(time.Duration(10+rand.Intn(2)) * time.Second)
-		}
+
+		w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
+		time.Sleep(time.Duration(5+rand.Intn(4)) * time.Second)
 	}
 }
 
@@ -217,9 +230,44 @@ func (q *MessageQueue) sendMessageVideo(ctx context.Context, recipient types.JID
 	return resp, err
 }
 
-func (q *MessageQueue) addParticipantes(group *types.GroupInfo) {
+func (q *MessageQueue) AddParticipantes(group *types.GroupInfo) {
 	for _, user := range group.Participants {
 		q.worker.db.InsertParticipant(group.JID.String(), group.Name, user.JID.String(), user.JID.User, user.DisplayName)
 
 	}
+}
+
+func generateGroupCode() string {
+	rand.Seed(time.Now().UnixNano())
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	code := make([]rune, 6)
+	for i := range code {
+		code[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(code)
+}
+
+// Função para adicionar o parâmetro ?id_grupo às URLs do domínio https://2ly.link
+func addGroupIDToURLs(message string) (string, *string) {
+	// Regex para identificar URLs do domínio https://2ly.link
+	urlRegex := regexp.MustCompile(`https://2ly\.link/[A-Za-z0-9]+`)
+	matches := urlRegex.FindAllString(message, -1)
+
+	// Se não encontrar nenhuma URL, retorna a mensagem original e nil
+	if len(matches) == 0 {
+		return message, nil
+	}
+
+	groupCode := generateGroupCode()
+
+	// Substitui as URLs no texto adicionando o parâmetro ?id_grupo=[CODIGO]
+	modifiedMessage := urlRegex.ReplaceAllStringFunc(message, func(url string) string {
+		// Verifica se a URL já tem parâmetros
+		if strings.Contains(url, "?") {
+			return url + "&id_grupo=" + groupCode
+		}
+		return url + "?id_grupo=" + groupCode
+	})
+
+	return modifiedMessage, &groupCode
 }
