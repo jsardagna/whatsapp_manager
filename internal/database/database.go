@@ -367,7 +367,7 @@ func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupI
 	var leave bool
 
 	// Verifica se o grupo já tem a flag "leave = true"
-	err := d.Conn.QueryRow("SELECT leave FROM groups_phone WHERE jid=$1 LIMIT 1", group.JID).Scan(&leave)
+	err := d.Conn.QueryRow("SELECT leave FROM groups WHERE jid=$1 LIMIT 1", group.JID).Scan(&leave)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
 			// Se não há registro do grupo, simplesmente retorna
