@@ -16,6 +16,7 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	proto "google.golang.org/protobuf/proto"
 )
 
@@ -34,7 +35,9 @@ func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte, onComplete func()) 
 	var isWaitingForPair atomic.Bool
 	var pairRejectChan = make(chan bool, 1)
 	w.Cli = whatsmeow.NewClient(w.device, nil)
-
+	w.Cli.PreRetryCallback = func(receipt *events.Receipt, id types.MessageID, retryCount int, msg *waE2E.Message) bool {
+		return false
+	}
 	w.Cli.PrePairCallback = func(jid types.JID, platform, businessName string) bool {
 		isWaitingForPair.Store(true)
 		defer isWaitingForPair.Store(false)
