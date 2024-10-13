@@ -35,6 +35,8 @@ func (w *BaseWhatsAppWorker) Connect(qrCodeChan chan []byte, onComplete func()) 
 	var isWaitingForPair atomic.Bool
 	var pairRejectChan = make(chan bool, 1)
 	w.Cli = whatsmeow.NewClient(w.device, nil)
+	w.Cli.EmitAppStateEventsOnFullSync = true
+	w.Cli.ErrorOnSubscribePresenceWithoutToken = false
 	w.Cli.PreRetryCallback = func(receipt *events.Receipt, id types.MessageID, retryCount int, msg *waE2E.Message) bool {
 		return false
 	}
