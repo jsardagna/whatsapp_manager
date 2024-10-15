@@ -128,6 +128,11 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
 	groups, err := w.findAllGroups()
 
+	// Função para inverter a slice
+	for i, j := 0, len(groups)-1; i < j; i, j = i+1, j-1 {
+		groups[i], groups[j] = groups[j], groups[i]
+	}
+
 	if err != nil {
 		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
 		db.UpdateConfig(w.Cli.Store.ID.User, err.Error(), 0)
