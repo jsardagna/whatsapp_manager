@@ -342,7 +342,7 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	cctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	cctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	resp := make(chan whatsmeow.SendResponse)

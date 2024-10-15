@@ -145,7 +145,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		for _, group := range groups {
 
 			elapsedTime := time.Since(startTime)
-			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(10)*time.Minute
+			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(3)*time.Minute
 
 			if !w.estaAtivo() {
 				break
@@ -207,16 +207,19 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 		onSuccess := func() {
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
 			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil)
+			time.Sleep(time.Duration(3+rand.Intn(3)) * time.Second)
 		}
 
 		onError := func(err error) {
 			fmt.Println(q.worker.Cli.Store.ID.User, err)
 			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err)
 			go db.VerifyToLeaveGroup(w.Cli, group)
+			if err.Error() != "context deadline exceeded" {
+				time.Sleep(time.Duration(3+rand.Intn(3)) * time.Second)
+			}
 		}
-
 		w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
-		time.Sleep(time.Duration(5+rand.Intn(4)) * time.Second)
+
 	}
 }
 
