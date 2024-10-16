@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -129,11 +128,6 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
 	groups, err := w.findAllGroups()
 
-	// Função para inverter a slice
-	// Ordena os grupos pelo número de participantes em ordem decrescente
-	sort.Slice(groups, func(i, j int) bool {
-		return len(groups[i].Participants) > len(groups[j].Participants)
-	})
 	total := len(groups)
 	atual := 0
 	if err != nil {
