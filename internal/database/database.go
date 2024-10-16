@@ -386,15 +386,12 @@ func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupI
 
 	// Verifica se o grupo já tem a flag "leave = true"
 	err := d.Conn.QueryRow("SELECT coalesce(leave,false) FROM groups WHERE jid=$1 LIMIT 1", group.JID.String()).Scan(&leave)
-	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
-			// Se não há registro do grupo, simplesmente retorna
-			return
-		}
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
 		log.Printf("Falha ao verificar grupo: %v", err)
 		return
+	} else {
+		leave = false
 	}
-
 	// Se o grupo tem a flag leave = true, ou tem menos de 2 participantes, deixa o grupo
 	if leave || (group.Participants != nil && len(group.Participants) < 3) {
 		cli.LeaveGroup(group.JID)
