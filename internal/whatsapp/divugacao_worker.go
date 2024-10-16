@@ -358,7 +358,7 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 			}
 		}()
 
-		r, err := w.Cli.SendMessage(cctx, recipient, msg, whatsmeow.SendRequestExtra{Timeout: 15})
+		r, err := w.Cli.SendMessage(cctx, recipient, msg, whatsmeow.SendRequestExtra{Timeout: 10})
 		if err != nil {
 			errChan <- err // Envia erro no canal de erro
 		} else {
@@ -369,7 +369,6 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 	case <-cctx.Done():
 		// Se o contexto expirar
 		onError(cctx.Err())
-
 		return false
 	case err := <-errChan:
 		// Se houver erro durante o envio
