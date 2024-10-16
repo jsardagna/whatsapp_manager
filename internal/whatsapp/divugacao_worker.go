@@ -358,7 +358,7 @@ func (w *DivulgacaoWorker) internMessage(recipient types.JID, msg *waE2E.Message
 			}
 		}()
 
-		r, err := w.Cli.SendMessage(cctx, recipient, msg, whatsmeow.SendRequestExtra{Timeout: 10})
+		r, err := w.Cli.SendMessage(cctx, recipient, msg, whatsmeow.SendRequestExtra{Timeout: 10 * time.Second})
 		if err != nil {
 			errChan <- err // Envia erro no canal de erro
 		} else {
