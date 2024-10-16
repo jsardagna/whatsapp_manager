@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -204,8 +205,8 @@ func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender
 		erStr = err1.Error()
 	}
 	_, err := d.Conn.Exec(`
-		INSERT INTO groups_on (juid, name, code, sender, msg, error) VALUES ($1, $2, $3, $4, $5, $6)
-	`, juid.String(), name, code, sender, msg, erStr)
+		INSERT INTO groups_on (juid, name, code, sender, msg, error,domain) VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, juid.String(), name, code, sender, msg, erStr, ExtractFirstDomain(msg))
 
 	/*if erStr == "context deadline exceeded" || erStr == "failed to get device list: unknown user server 'lid'" {
 		log.Printf("removendo grupo %s", name)
@@ -214,6 +215,22 @@ func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender
 		fmt.Println(cli.GetGroupInfo(juid))
 	}*/
 	return err
+}
+
+func ExtractFirstDomain(input string) string {
+	// Definindo o padrão regex para capturar o domínio da URL
+	regex := regexp.MustCompile(`https?:\/\/(?:www\.)?([^\/]+)`)
+
+	// Encontra a primeira correspondência da regex na string
+	match := regex.FindStringSubmatch(input)
+
+	// Se houver correspondência, retorna o domínio (grupo 1)
+	if len(match) > 1 {
+		return match[1]
+	}
+
+	// Se não encontrar nenhum domínio, retorna uma string vazia
+	return ""
 }
 
 func (d *Database) UpdateConfig(juid string, lastError string, totalGrupos int) error {
@@ -352,7 +369,7 @@ func (d *Database) InsertGroupFone(cli *whatsmeow.Client, group *types.GroupInfo
 			return
 		}
 	} else {
-		d.Conn.Exec(` update groups_phone set paticipants = $1  WHERE jid=$2 `, total, group.JID)
+		d.Conn.Exec(` update groups_phone set paticipants = $1  WHERE jid=$2 `, total, group.JID.String())
 
 		if leave || total < 2 {
 			cli.LeaveGroup(group.JID)
@@ -367,7 +384,7 @@ func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupI
 	var leave bool
 
 	// Verifica se o grupo já tem a flag "leave = true"
-	err := d.Conn.QueryRow("SELECT leave FROM groups WHERE jid=$1 LIMIT 1", group.JID).Scan(&leave)
+	err := d.Conn.QueryRow("SELECT leave FROM groups WHERE jid=$1 LIMIT 1", group.JID.String()).Scan(&leave)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
 			// Se não há registro do grupo, simplesmente retorna
@@ -378,7 +395,7 @@ func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupI
 	}
 
 	// Se o grupo tem a flag leave = true, ou tem menos de 2 participantes, deixa o grupo
-	if leave || (group.Participants != nil && len(group.Participants) < 2) {
+	if leave || (group.Participants != nil && len(group.Participants) < 3) {
 		cli.LeaveGroup(group.JID)
 	}
 }
