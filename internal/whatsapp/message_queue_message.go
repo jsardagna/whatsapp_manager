@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -130,9 +131,9 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 
 	// Função para inverter a slice
 	// Ordena os grupos pelo número de participantes em ordem decrescente
-	//sort.Slice(groups, func(i, j int) bool {
-	//	return len(groups[i].Participants) > len(groups[j].Participants)
-	//})
+	sort.Slice(groups, func(i, j int) bool {
+		return len(groups[i].Participants) > len(groups[j].Participants)
+	})
 
 	if err != nil {
 		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
@@ -217,6 +218,7 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 				time.Sleep(time.Duration(3+rand.Intn(3)) * time.Second)
 			}
 		}
+
 		w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
 
 	}
