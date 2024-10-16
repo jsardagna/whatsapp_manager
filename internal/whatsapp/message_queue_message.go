@@ -103,13 +103,13 @@ func (q *MessageQueue) SendVideo(group *types.GroupInfo, uploaded whatsmeow.Uplo
 	resp := make(chan whatsmeow.SendResponse)
 	go func() {
 		r, err2 := q.sendMessageVideo(cctx, group.JID, uploaded, data, msg)
-		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, err2)
+		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, err2, 0, 0, 0, 0)
 		resp <- r
 	}()
 	select {
 	case <-cctx.Done():
 		fmt.Println(cctx.Err())
-		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, cctx.Err())
+		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, cctx.Err(), 0, 0, 0, 0)
 	case <-resp:
 		fmt.Println("VIDEO ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
 		time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
@@ -134,7 +134,8 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	sort.Slice(groups, func(i, j int) bool {
 		return len(groups[i].Participants) > len(groups[j].Participants)
 	})
-
+	total := len(groups)
+	atual := 0
 	if err != nil {
 		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
 		db.UpdateConfig(w.Cli.Store.ID.User, err.Error(), 0)
@@ -143,9 +144,10 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		startTime := time.Now()
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
+			atual++
 
 			elapsedTime := time.Since(startTime)
-			remainingTime := time.Duration(q.intervalo)*time.Hour - elapsedTime - time.Duration(3)*time.Minute
+			remainingTime := q.intervalo - elapsedTime - time.Duration(2)*time.Minute
 
 			if !w.estaAtivo() {
 				break
@@ -164,7 +166,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			}
 			if !exists {
 				go q.ControleParcitipantes(group)
-				q.sendMessage(kind, group, uploaded, data, msg, ddd)
+				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total)
 			}
 
 			if remainingTime <= 0 {
@@ -195,32 +197,31 @@ func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
 	}
 }
 
-func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string) {
+func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int) {
 	w := q.worker
 	db := w.db
 
 	valid := kind == nil || db.ValidGroupKind(group.JID, *kind, ddd)
 
 	if valid {
+		startTime := time.Now()
 		modifiedMessage, groupCode := addGroupIDToURLs(msg)
 
 		onSuccess := func() {
+			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
-			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil)
-			time.Sleep(time.Duration(3+rand.Intn(3)) * time.Second)
+			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil, elapsedTime.Seconds(), len(group.Participants), atual, total)
+			time.Sleep(time.Duration(2+rand.Intn(2)) * time.Second)
 		}
 
 		onError := func(err error) {
+			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, err)
-			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err)
-			go db.VerifyToLeaveGroup(w.Cli, group)
-			if err.Error() != "context deadline exceeded" {
-				time.Sleep(time.Duration(3+rand.Intn(3)) * time.Second)
-			}
+			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total)
 		}
 
 		w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
-
+		go db.VerifyToLeaveGroup(w.Cli, group)
 	}
 }
 

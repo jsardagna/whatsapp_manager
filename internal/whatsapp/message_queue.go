@@ -84,7 +84,7 @@ func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 			} else if request.tipo == "link" {
 				go queue.sendAllMessagesLink(request.ignore, request.message, request.kind, request.ddd)
 			}
-			time.Sleep(time.Duration(queue.intervalo * time.Hour))
+			time.Sleep(time.Duration(queue.intervalo))
 		} else {
 			time.Sleep(time.Duration(10 * time.Second))
 		}

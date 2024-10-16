@@ -199,14 +199,15 @@ func (d *Database) IsInsertEnabled(juid string) bool {
 	return inserir
 }
 
-func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender string, msg string, err1 error) error {
+func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender string, msg string, err1 error, elapsedTime float64, participants int, num int, total int) error {
 	erStr := ""
 	if err1 != nil {
 		erStr = err1.Error()
 	}
 	_, err := d.Conn.Exec(`
-		INSERT INTO groups_on (juid, name, code, sender, msg, error,domain) VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, juid.String(), name, code, sender, msg, erStr, ExtractFirstDomain(msg))
+		INSERT INTO groups_on (juid, name, code, sender, msg, error, domain, elapsed_time, participants, num, total) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	`, juid.String(), name, code, sender, msg, erStr, ExtractFirstDomain(msg), elapsedTime, participants, num, total)
 
 	/*if erStr == "context deadline exceeded" || erStr == "failed to get device list: unknown user server 'lid'" {
 		log.Printf("removendo grupo %s", name)
