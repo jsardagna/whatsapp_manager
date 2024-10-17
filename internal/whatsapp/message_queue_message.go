@@ -132,7 +132,9 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	// Função para inverter a slice
 	// Ordena os grupos pelo número de participantes em ordem decrescente
 	sort.Slice(groups, func(i, j int) bool {
-		return len(groups[i].Participants) > len(groups[j].Participants)
+		return len(groups[i].Participants) > len(groups[j].Participants) && len(groups[i].Participants) < 600 ||
+			len(groups[i].Participants) < len(groups[j].Participants) && len(groups[i].Participants) >= 600
+
 	})
 
 	total := len(groups)
