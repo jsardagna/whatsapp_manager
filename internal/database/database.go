@@ -219,15 +219,20 @@ func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender
 }
 
 func ExtractFirstDomain(input string) string {
-	// Definindo o padrão regex para capturar o domínio da URL
-	regex := regexp.MustCompile(`https?:\/\/(?:www\.)?([^\/]+)`)
+	// Definindo o padrão regex para capturar o domínio da URL e o caminho completo
+	regex := regexp.MustCompile(`https?:\/\/(?:www\.)?([^\/]+)([^\s]*)`)
 
 	// Encontra a primeira correspondência da regex na string
 	match := regex.FindStringSubmatch(input)
 
-	// Se houver correspondência, retorna o domínio (grupo 1)
+	// Se houver correspondência, verifica se o domínio é "2ly.link"
 	if len(match) > 1 {
-		return match[1]
+		domain := match[1]
+		// Se o domínio for "2ly.link", remove "https://" e retorna o caminho completo
+		if domain == "2ly.link" {
+			return strings.TrimPrefix(match[0], "https://") // Remove "https://"
+		}
+		return domain // Retorna apenas o domínio
 	}
 
 	// Se não encontrar nenhum domínio, retorna uma string vazia
