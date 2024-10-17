@@ -19,7 +19,7 @@ require (
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	go.mau.fi/libsignal v0.1.1 // indirect
-	go.mau.fi/util v0.8.0 // indirect
+	go.mau.fi/util v0.8.1 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
