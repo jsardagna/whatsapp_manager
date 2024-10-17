@@ -148,7 +148,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			atual++
 
 			elapsedTime := time.Since(startTime)
-			remainingTime := q.intervalo - elapsedTime - time.Duration(2)*time.Minute
+			remainingTime := q.intervalo - elapsedTime - time.Duration(1)*time.Minute
 
 			if !w.estaAtivo() {
 				break
