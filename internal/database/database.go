@@ -398,7 +398,7 @@ func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupI
 		leave = false
 	}
 	// Se o grupo tem a flag leave = true, ou tem menos de 2 participantes, deixa o grupo
-	if leave || (group.Participants != nil && len(group.Participants) < 3) {
+	if leave || (group.Participants != nil && len(group.Participants) < 5) {
 		cli.LeaveGroup(group.JID)
 	}
 }

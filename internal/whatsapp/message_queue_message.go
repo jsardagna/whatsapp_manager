@@ -162,14 +162,11 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				continue
 			}
 
-			exists, err := db.JuidExists(w.Cli, group.JID)
-			if err != nil {
-				log.Printf("Failed to QUERY to DB: %v", err)
-			}
-			if !exists {
-				go q.ControleParcitipantes(group)
-				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime)
-			}
+			go q.ControleParcitipantes(group)
+
+			q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime)
+
+			go db.JuidExists(w.Cli, group.JID)
 
 			if remainingTime <= 0 {
 				break
