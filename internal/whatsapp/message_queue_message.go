@@ -213,7 +213,6 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
 			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
-			time.Sleep(time.Duration(1+rand.Intn(2)) * time.Second)
 		}
 
 		onError := func(err error) {
