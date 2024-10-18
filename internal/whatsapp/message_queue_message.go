@@ -103,13 +103,13 @@ func (q *MessageQueue) SendVideo(group *types.GroupInfo, uploaded whatsmeow.Uplo
 	resp := make(chan whatsmeow.SendResponse)
 	go func() {
 		r, err2 := q.sendMessageVideo(cctx, group.JID, uploaded, data, msg)
-		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, err2, 0, 0, 0, 0)
+		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, err2, 0, 0, 0, 0, time.Now())
 		resp <- r
 	}()
 	select {
 	case <-cctx.Done():
 		fmt.Println(cctx.Err())
-		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, cctx.Err(), 0, 0, 0, 0)
+		q.worker.db.CreateGroup(group.JID, group.Name, nil, q.worker.Cli.Store.ID.User, msg, cctx.Err(), 0, 0, 0, 0, time.Now())
 	case <-resp:
 		fmt.Println("VIDEO ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
 		time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
@@ -169,7 +169,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			}
 			if !exists {
 				go q.ControleParcitipantes(group)
-				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total)
+				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime)
 			}
 
 			if remainingTime <= 0 {
@@ -200,7 +200,7 @@ func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
 	}
 }
 
-func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int) {
+func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int, startSend time.Time) {
 	w := q.worker
 	db := w.db
 
@@ -213,14 +213,14 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 		onSuccess := func() {
 			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, "IMAGEM ENVIADA:", group.Name)
-			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil, elapsedTime.Seconds(), len(group.Participants), atual, total)
+			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
 			time.Sleep(time.Duration(1+rand.Intn(2)) * time.Second)
 		}
 
 		onError := func(err error) {
 			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, err)
-			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total)
+			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
 		}
 
 		w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
