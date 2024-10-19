@@ -37,6 +37,7 @@ func (m *WhatsAppManager) StartComando(grupoComando string, deviceComando string
 	m.grupoComando = grupoComando
 	m.deviceComando = deviceComando
 	store, _ := m.newStore(1)
+
 	device, err := store.GetDevice(parseJID(deviceComando))
 	if err != nil {
 		return err
@@ -107,8 +108,9 @@ func (m *WhatsAppManager) StartAllDevices() error {
 			// Verifica se o ID do dispositivo é o do comenando e não inicializar
 			if !strings.Contains(device.ID.String(), m.deviceComando) {
 				fmt.Printf("Iniciando worker para o device: %s\n", device.ID.String())
-				m.startWorker(device, nil)
-
+				store, _ := m.newStore(1)
+				d, _ := store.GetDevice(*device.ID)
+				m.startWorker(d, nil)
 			}
 		}(device)
 	}
@@ -154,7 +156,7 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar banco API")
 	}
-	db.SetMaxOpenConns(100)
+	db.SetMaxOpenConns(50)
 	m.storeContainer = sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), nil)
 
 	return m.storeContainer, nil
