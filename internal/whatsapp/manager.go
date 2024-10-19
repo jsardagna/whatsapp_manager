@@ -108,7 +108,7 @@ func (m *WhatsAppManager) StartAllDevices() error {
 			// Verifica se o ID do dispositivo é o do comenando e não inicializar
 			if !strings.Contains(device.ID.String(), m.deviceComando) {
 				fmt.Printf("Iniciando worker para o device: %s\n", device.ID.String())
-				store, _ := m.newStore(1)
+				store, _ := m.newStore(3)
 				d, _ := store.GetDevice(*device.ID)
 				m.startWorker(d, nil)
 			}
