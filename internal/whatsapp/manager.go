@@ -1,6 +1,7 @@
 package whatsapp
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -146,12 +147,13 @@ func (m *WhatsAppManager) getAllDevices() ([]*store.Device, error) {
 func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	store.DeviceProps.Os = proto.String("Google Chrome")
 	store.DeviceProps.RequireFullSync = proto.Bool(false)
-	var err error
-	m.storeContainer, err = sqlstore.New(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"), nil)
 
+	db, err := sql.Open(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"))
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar banco API")
 	}
+	db.SetMaxOpenConns(100)
+	m.storeContainer = sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), nil)
 
 	return m.storeContainer, nil
 }
