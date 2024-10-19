@@ -63,14 +63,14 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		if err != nil { //caso de erro
 			gr, err2 := w.Cli.GetGroupInfoFromLink(*cmd)
 			if err2 != nil {
-				println("FALHA CELULAR NÃ0 ACHOU GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
+				println("FALHA CELULAR NÃ0 ACHOU GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID, err2)
 			} else {
 				w.cmdGroupJUID = gr.JID.String()
 			}
 		} else {
 			w.cmdGroupJUID = group.String()
 		}
-		println("GRUPO", w.device.ID.User, w.cmdGroupJUID)
+		println("GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
 	} else {
 		DIVULGACAO1 := "https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8"
 		DIVULGACAO2 := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
