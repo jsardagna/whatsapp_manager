@@ -99,6 +99,7 @@ func (w *ComandoWorker) sendImage(recipient types.JID, data []byte) {
 
 func (w *ComandoWorker) enviarTextoDirect(message string, jid types.JID) {
 	msg := &waE2E.Message{Conversation: proto.String(message)}
+	println("enviando TEXTO")
 	w.Cli.SendMessage(context.Background(), jid, msg)
 }
 
