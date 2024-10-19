@@ -63,7 +63,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		if err != nil { //caso de erro
 			gr, err2 := w.Cli.GetGroupInfoFromLink(*cmd)
 			if err2 != nil {
-				println("FALHA CELULAR NÃ0 ACHOU GRUPO", w.device.ID.User, w.cmdGroupJUID)
+				println("FALHA CELULAR NÃ0 ACHOU GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
 			} else {
 				w.cmdGroupJUID = gr.JID.String()
 			}

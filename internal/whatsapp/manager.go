@@ -36,12 +36,14 @@ func NewWhatsAppManager(db database.Database) *WhatsAppManager {
 func (m *WhatsAppManager) StartComando(grupoComando string, deviceComando string) error {
 	m.grupoComando = grupoComando
 	m.deviceComando = deviceComando
-	device, err := m.storeContainer.GetDevice(parseJID(deviceComando))
+	store, _ := m.newStore(1)
+	device, err := store.GetDevice(parseJID(deviceComando))
 	if err != nil {
 		return err
 	} else if device == nil {
 		device = m.storeContainer.NewDevice()
 	}
+
 	c := NewComandoWorker(m, device, grupoComando, m.db)
 	go func() {
 		defer func() {
@@ -156,6 +158,19 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	m.storeContainer = sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), nil)
 
 	return m.storeContainer, nil
+}
+
+func (m *WhatsAppManager) newStore(con int) (*sqlstore.Container, error) {
+	store.DeviceProps.Os = proto.String("Google Chrome")
+	store.DeviceProps.RequireFullSync = proto.Bool(false)
+
+	db, err := sql.Open(os.Getenv("DIALECT_W"), os.Getenv("ADDRESS_W"))
+	if err != nil {
+		return nil, fmt.Errorf("erro ao conectar banco API")
+	}
+	db.SetMaxOpenConns(con)
+
+	return sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), nil), nil
 }
 
 func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
