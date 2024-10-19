@@ -14,7 +14,6 @@ import (
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
-	waLog "go.mau.fi/whatsmeow/util/log"
 	proto "google.golang.org/protobuf/proto"
 )
 
@@ -153,8 +152,8 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar banco API")
 	}
-	//db.SetMaxOpenConns(500)
-	m.storeContainer = sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), waLog.Stdout("Database", "ERROR", true))
+	db.SetMaxOpenConns(500)
+	m.storeContainer = sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), nil)
 
 	return m.storeContainer, nil
 }

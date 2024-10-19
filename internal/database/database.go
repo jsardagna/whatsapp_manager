@@ -63,7 +63,7 @@ var cacheMutex sync.RWMutex
 func NewDatabase() (*Database, error) {
 	phoneCache = make(map[string]bool)
 	db, err := sql.Open(os.Getenv("DIALECT"), os.Getenv("ADDRESS"))
-	//db.SetMaxOpenConns(100)
+	db.SetMaxOpenConns(100)
 	if err != nil {
 		return nil, err
 	}
