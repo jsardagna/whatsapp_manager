@@ -66,11 +66,12 @@ func main() {
 		log.Fatalf("Erro ao Iniclicar comandos: %v", err)
 	}
 
-	// Iniciar o gerenciamento de dispositivos
+	/* Iniciar o gerenciamento de dispositivos
 	err = manager.StartAllDevices()
 	if err != nil {
 		log.Fatalf("Erro ao conectar divulgadores: %v", err)
 	}
+	*/
 
 	go func() {
 		// Aguardar um sinal de interrupção
