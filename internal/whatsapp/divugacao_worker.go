@@ -55,7 +55,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	println("CELULAR:", w.Cli.Store.ID.User)
 	go w.monitorInsert(w.Cli.Store.ID.User)
-	w.Manager.divulgadores[w.device.ID.User] = w
+	w.safeAddMap()
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
 		w.cmdGroupJUID = *cmd
@@ -89,6 +89,12 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	}
 	w.Connected = true
 	return nil
+}
+
+func (w *DivulgacaoWorker) safeAddMap() {
+	w.Manager.MuDivulgadores.Lock()
+	defer w.Manager.MuDivulgadores.Unlock()
+	w.Manager.divulgadores[w.device.ID.User] = w
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {

@@ -24,6 +24,7 @@ type WhatsAppManager struct {
 	db             database.Database
 	grupoComando   string
 	deviceComando  string
+	MuDivulgadores sync.Mutex
 }
 
 func NewWhatsAppManager(db database.Database) *WhatsAppManager {
