@@ -99,7 +99,7 @@ func (w *DivulgacaoWorker) safeAddMap() {
 
 func (w *DivulgacaoWorker) inicializaFila() {
 	w.queueN = w.NewMessageQueue(60 * time.Minute)
-	w.queueAll = w.NewMessageQueue(70 * time.Minute)
+	w.queueAll = w.NewMessageQueue(60 * time.Minute)
 	go w.processStack(w.queueN)
 	go w.processStack(w.queueAll)
 
