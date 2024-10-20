@@ -68,7 +68,7 @@ func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 			request := queue.stack[0]
 			queue.stack = queue.stack[1:]
 			// Chame a função sendAllMessages com os dados da solicitação
-			if request.tipo == "image" {
+			if request.tipo == "image" || request.tipo == "video" {
 				go func() {
 					defer func() {
 						if r := recover(); r != nil {
@@ -77,10 +77,8 @@ func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 							LogErrorToFile(r)
 						}
 					}()
-					queue.sendAllMessages(request.ignore, *request.data, *request.text, request.kind, request.ddd)
+					go queue.sendAllMessages(request.ignore, *request.data, *request.text, request.kind, request.ddd, request.tipo)
 				}()
-			} else if request.tipo == "video" {
-				go queue.sendAllMessagesVideo(request.ignore, *request.data, *request.text, request.kind, request.ddd)
 			} else if request.tipo == "link" {
 				go queue.sendAllMessagesLink(request.ignore, request.message, request.kind, request.ddd)
 			}

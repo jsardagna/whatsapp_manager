@@ -93,7 +93,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 
 func (w *DivulgacaoWorker) inicializaFila() {
 	w.queueN = w.NewMessageQueue(60 * time.Minute)
-	w.queueAll = w.NewMessageQueue(90 * time.Minute)
+	w.queueAll = w.NewMessageQueue(70 * time.Minute)
 	go w.processStack(w.queueN)
 	go w.processStack(w.queueAll)
 
@@ -388,6 +388,22 @@ func controlePanic(w *DivulgacaoWorker, r interface{}) {
 	}
 	fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
 	LogErrorToFile(r)
+}
+
+func (w *DivulgacaoWorker) sendVideo(recipient types.JID, uploaded whatsmeow.UploadResponse, data []byte, caption string, onSuccess func(), onError func(error)) bool {
+
+	msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
+		Caption:       proto.String(caption),
+		URL:           proto.String(uploaded.URL),
+		DirectPath:    proto.String(uploaded.DirectPath),
+		MediaKey:      uploaded.MediaKey,
+		Mimetype:      proto.String(http.DetectContentType(data)),
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+	}}
+
+	return w.internMessage(recipient, msg, onSuccess, onError)
 }
 
 func (w *DivulgacaoWorker) sendImage(recipient types.JID, uploaded whatsmeow.UploadResponse, data []byte, caption string, onSuccess func(), onError func(error)) bool {
