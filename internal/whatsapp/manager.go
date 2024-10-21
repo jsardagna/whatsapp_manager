@@ -153,7 +153,7 @@ func (m *WhatsAppManager) InitializeStore() (*sqlstore.Container, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar banco API")
 	}
-	db.SetMaxOpenConns(100)
+	db.SetMaxOpenConns(50)
 	m.storeContainer = sqlstore.NewWithDB(db, os.Getenv("DIALECT_W"), nil)
 
 	return m.storeContainer, nil

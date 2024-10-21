@@ -206,9 +206,9 @@ func (d *Database) CreateGroup(juid types.JID, name string, code *string, sender
 		erStr = err1.Error()
 	}
 	_, err := d.Conn.Exec(`
-		INSERT INTO groups_on (juid, name, code, sender, msg, error, domain, elapsed_time, participants, num, total, start_send) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-	`, juid.String(), name, code, sender, "", erStr, ExtractFirstDomain(msg), elapsedTime, participants, num, total, startSend)
+		INSERT INTO groups_on (juid, code, sender,  error, domain, elapsed_time, participants, num, total, start_send) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`, juid.String(), code, sender, erStr, ExtractFirstDomain(msg), elapsedTime, participants, num, total, startSend)
 
 	/*if erStr == "context deadline exceeded" || erStr == "failed to get device list: unknown user server 'lid'" {
 		log.Printf("removendo grupo %s", name)
