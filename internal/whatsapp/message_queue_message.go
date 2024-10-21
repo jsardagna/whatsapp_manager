@@ -26,6 +26,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 		fmt.Println("FALHA AO BUSCAR GRUPO 2: ", q.worker.Cli.Store.ID.User, err.Error())
 	} else {
 		for _, group := range groups {
+
 			if group.JID.String() == ignore ||
 				group.JID.String() == "120363149950387591@g.us" ||
 				group.JID.String() == "120363343818835998@g.us" ||
@@ -154,13 +155,18 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 
 		onError := func(err error) {
 			elapsedTime := time.Since(startTime)
-			fmt.Println(q.worker.Cli.Store.ID.User, err)
-			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
+			if w.estaAtivo() {
+				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
+			}
 		}
 		if midia == "video" {
 			w.sendVideo(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
 		} else {
 			w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
+		}
+
+		if !w.estaAtivo() {
+			return
 		}
 
 		go db.VerifyToLeaveGroup(w.Cli, group)
