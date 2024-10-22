@@ -41,22 +41,12 @@ func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
 		w.workerDivulgacao()
 	}
 	w.Connect(qrCodeChan, onComplete)
-
 }
 
 func (w *DivulgacaoWorker) workerDivulgacao() error {
 
-	if !w.estaAtivo() {
-		return nil
-	}
-
-	go w.inicializaFila()
-	w.Cli.RemoveEventHandlers()
-	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	cel := w.Cli.Store.ID.User
 	println("CELULAR:", w.Cli.Store.ID.User)
-	go w.monitorInsert(w.Cli.Store.ID.User)
-	w.safeAddMap()
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
 		w.cmdGroupJUID = *cmd
@@ -68,7 +58,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 				if w.cmdGroupJUID == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
 					w.cmdGroupJUID = "120363343818835998@g.us"
 				}
-				println("FALHA CELULAR NÃ0 ACHOU GRUPO", cel, err2)
+				println("FALHA CELULAR NÃ0 ACHOU GRUPO", cel, err2.Error())
 			} else {
 				w.cmdGroupJUID = gr.JID.String()
 			}
@@ -92,6 +82,15 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		}
 
 	}
+	if !w.estaAtivo() {
+		return nil
+	}
+
+	go w.inicializaFila()
+	go w.monitorInsert(w.Cli.Store.ID.User)
+	w.Cli.RemoveEventHandlers()
+	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
+	w.safeAddMap()
 	w.Connected = true
 	return nil
 }
