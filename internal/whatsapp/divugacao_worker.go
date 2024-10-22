@@ -51,43 +51,43 @@ func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
 }
 
 func (w *DivulgacaoWorker) workerDivulgacao() error {
-
 	cel := w.Cli.Store.ID.User
 	println("CELULAR:", w.Cli.Store.ID.User)
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
-		w.cmdGroupJUID = *cmd
-		group, err := w.Cli.JoinGroupWithLink(*cmd)
-		if err != nil { //caso de erro
-			println("ERRO", cel, err.Error())
-			gr, err2 := w.Cli.GetGroupInfoFromLink(*cmd)
-			if err2 != nil {
-				if w.cmdGroupJUID == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
-					w.cmdGroupJUID = "120363343818835998@g.us"
-				}
-				println("FALHA CELULAR NÃ0 ACHOU GRUPO", cel, err2.Error())
-			} else {
-				w.cmdGroupJUID = gr.JID.String()
-			}
+		if *cmd == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
+			w.cmdGroupJUID = "120363343818835998@g.us"
+		} else if *cmd == "https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8" {
+			w.cmdGroupJUID = "120363149950387591@g.us"
+		} else if *cmd == "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp" {
+			w.cmdGroupJUID = "120363330490936340@g.us"
 		} else {
-			w.cmdGroupJUID = group.String()
+			group, err := w.Cli.GetGroupInfoFromLink(*cmd)
+			if err != nil { //caso de erro
+				println("ERRO", cel, err.Error())
+				gr, err2 := w.Cli.JoinGroupWithLink(*cmd)
+				if err2 != nil {
+					println("FALHA CELULAR NÃ0 ACHOU GRUPO", cel, err2.Error())
+				} else {
+					w.cmdGroupJUID = gr.String()
+				}
+			} else {
+				w.cmdGroupJUID = group.JID.String()
+			}
 		}
 	} else {
 		DIVULGACAO1 := "https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8"
 		DIVULGACAO2 := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
 		DIVULGACAO3 := "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp"
-
-		group, err := w.Cli.JoinGroupWithLink(DIVULGACAO1)
+		group, err := w.Cli.JoinGroupWithLink(DIVULGACAO3)
 		if err == nil {
-			w.db.InsertConfig(w.Cli.Store.ID.User, DIVULGACAO1)
+			w.db.InsertConfig(w.Cli.Store.ID.User, DIVULGACAO3)
 			w.cmdGroupJUID = group.String()
-			w.Cli.JoinGroupWithLink(DIVULGACAO3) //DIVULGAÇÃO3
-			w.Cli.JoinGroupWithLink(DIVULGACAO2) //DIVULGAÇÃO
-		} else { //MANTÉM NO 1
+			w.Cli.JoinGroupWithLink(DIVULGACAO1) //DIVULGAÇÃO3
 			w.Cli.JoinGroupWithLink(DIVULGACAO2) //DIVULGAÇÃO
 		}
 	}
-	if w.estaAtivo() {
+	if w.Cli.IsConnected() {
 		go w.inicializaFila()
 		go w.monitorInsert(w.Cli.Store.ID.User)
 		w.Cli.RemoveEventHandlers()

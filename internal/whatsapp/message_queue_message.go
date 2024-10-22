@@ -161,8 +161,9 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			if w.estaAtivo() {
 				fmt.Println(q.worker.Cli.Store.ID.User, midia, "ERRO:", group.Name)
 				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
+				q.waitNext(elapsedTime)
 			}
-			q.waitNext(elapsedTime)
+
 		}
 		if midia == "video" {
 			w.sendVideo(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
@@ -179,8 +180,8 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 }
 
 func (*MessageQueue) waitNext(elapsedTime time.Duration) {
-	if elapsedTime < 4*time.Second {
-		remainingTime := 4*time.Second - elapsedTime
+	if elapsedTime < 5*time.Second {
+		remainingTime := 5*time.Second - elapsedTime
 		time.Sleep(remainingTime + time.Duration(rand.Intn(3))*time.Second)
 	}
 }
