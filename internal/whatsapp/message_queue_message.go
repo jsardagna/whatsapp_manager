@@ -107,7 +107,9 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 
 			q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia)
 
-			go db.JuidExists(w.Cli, group.JID)
+			if w.estaAtivo() {
+				go db.JuidExists(w.Cli, group.JID)
+			}
 
 			if remainingTime <= 0 {
 				break
