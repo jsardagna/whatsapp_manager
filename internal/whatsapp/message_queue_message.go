@@ -47,7 +47,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 				select {
 				case <-resp:
 					fmt.Println("LINK ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
-					time.Sleep(time.Duration(15+rand.Intn(5)) * time.Second)
+					time.Sleep(time.Duration(15+time.Sleep(time.Duration(60*time.Second))) * time.Second)
 				case <-cctx.Done():
 					fmt.Println(cctx.Err())
 				}
@@ -151,12 +151,21 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, midia, "ENVIADA:", group.Name)
 			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
+			if elapsedTime < 3*time.Second {
+				remainingTime := 3*time.Second - elapsedTime
+				time.Sleep(remainingTime + time.Duration(rand.Intn(2))*time.Second)
+			}
+
 		}
 
 		onError := func(err error) {
 			elapsedTime := time.Since(startTime)
 			if w.estaAtivo() {
 				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
+			}
+			if elapsedTime < 3*time.Second {
+				remainingTime := 3*time.Second - elapsedTime
+				time.Sleep(remainingTime + time.Duration(rand.Intn(2))*time.Second)
 			}
 		}
 		if midia == "video" {
