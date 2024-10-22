@@ -47,7 +47,7 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 				select {
 				case <-resp:
 					fmt.Println("LINK ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
-					time.Sleep(time.Duration(15+time.Sleep(time.Duration(60*time.Second))) * time.Second)
+
 				case <-cctx.Done():
 					fmt.Println(cctx.Err())
 				}
