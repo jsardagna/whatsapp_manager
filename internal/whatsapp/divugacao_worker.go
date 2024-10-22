@@ -53,6 +53,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	go w.inicializaFila()
 	w.Cli.RemoveEventHandlers()
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
+	cel := w.Cli.Store.ID.User
 	println("CELULAR:", w.Cli.Store.ID.User)
 	go w.monitorInsert(w.Cli.Store.ID.User)
 	w.safeAddMap()
@@ -61,9 +62,13 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		w.cmdGroupJUID = *cmd
 		group, err := w.Cli.JoinGroupWithLink(*cmd)
 		if err != nil { //caso de erro
+			println("ERRO", cel, err)
 			gr, err2 := w.Cli.GetGroupInfoFromLink(*cmd)
 			if err2 != nil {
-				println("FALHA CELULAR NÃ0 ACHOU GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID, err2)
+				if w.cmdGroupJUID == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
+					w.cmdGroupJUID = "120363343818835998@g.us"
+				}
+				println("FALHA CELULAR NÃ0 ACHOU GRUPO", cel, err2)
 			} else {
 				w.cmdGroupJUID = gr.JID.String()
 			}
