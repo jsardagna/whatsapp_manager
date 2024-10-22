@@ -52,7 +52,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		w.cmdGroupJUID = *cmd
 		group, err := w.Cli.JoinGroupWithLink(*cmd)
 		if err != nil { //caso de erro
-			println("ERRO", cel, err)
+			println("ERRO", cel, err.Error())
 			gr, err2 := w.Cli.GetGroupInfoFromLink(*cmd)
 			if err2 != nil {
 				if w.cmdGroupJUID == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
@@ -65,7 +65,6 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		} else {
 			w.cmdGroupJUID = group.String()
 		}
-		println("GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
 	} else {
 		DIVULGACAO1 := "https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8"
 		DIVULGACAO2 := "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW"
@@ -80,7 +79,6 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 		} else { //MANTÉM NO 1
 			w.Cli.JoinGroupWithLink(DIVULGACAO2) //DIVULGAÇÃO
 		}
-
 	}
 	if !w.estaAtivo() {
 		return nil
@@ -92,6 +90,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
 	w.safeAddMap()
 	w.Connected = true
+	println("GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
 	return nil
 }
 
