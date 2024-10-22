@@ -38,6 +38,13 @@ func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, db database.D
 
 func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
 	onComplete := func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recuperado de um panic: %v\n", r)
+				fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+				LogErrorToFile(r)
+			}
+		}()
 		w.workerDivulgacao()
 	}
 	w.Connect(qrCodeChan, onComplete)
@@ -80,17 +87,15 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 			w.Cli.JoinGroupWithLink(DIVULGACAO2) //DIVULGAÇÃO
 		}
 	}
-	if !w.estaAtivo() {
-		return nil
+	if w.estaAtivo() {
+		go w.inicializaFila()
+		go w.monitorInsert(w.Cli.Store.ID.User)
+		w.Cli.RemoveEventHandlers()
+		w.Cli.AddEventHandler(w.handleWhatsAppEvents)
+		w.safeAddMap()
+		w.Connected = true
+		println("GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
 	}
-
-	go w.inicializaFila()
-	go w.monitorInsert(w.Cli.Store.ID.User)
-	w.Cli.RemoveEventHandlers()
-	w.Cli.AddEventHandler(w.handleWhatsAppEvents)
-	w.safeAddMap()
-	w.Connected = true
-	println("GRUPO", w.Cli.Store.ID.User, w.cmdGroupJUID)
 	return nil
 }
 

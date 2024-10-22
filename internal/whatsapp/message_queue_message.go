@@ -163,8 +163,8 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			if w.estaAtivo() {
 				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
 			}
-			if elapsedTime < 3*time.Second {
-				remainingTime := 3*time.Second - elapsedTime
+			if elapsedTime < 4*time.Second {
+				remainingTime := 4*time.Second - elapsedTime
 				time.Sleep(remainingTime + time.Duration(rand.Intn(2))*time.Second)
 			}
 		}
