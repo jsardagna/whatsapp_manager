@@ -57,6 +57,7 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 	if cmd != nil {
 		if *cmd == "https://chat.whatsapp.com/JzeDefo3oBYGFw0zQUOCfW" {
 			w.cmdGroupJUID = "120363343818835998@g.us"
+			w.Cli.JoinGroupWithLink("https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8")
 		} else if *cmd == "https://chat.whatsapp.com/EeMGDADPOYIFlMbq3noAc8" {
 			w.cmdGroupJUID = "120363149950387591@g.us"
 		} else if *cmd == "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp" {
