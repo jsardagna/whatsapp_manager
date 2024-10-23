@@ -192,6 +192,7 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 							total = len(w.queueAll.stack)
 						}
 						w.enviarTexto(cmd, total, evt)
+						go db.UpdateConfig(w.Cli.Store.ID.User, "PREPARA-ENVIO", 0)
 					}
 				}
 			} else {

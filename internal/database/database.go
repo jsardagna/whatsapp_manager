@@ -241,14 +241,18 @@ func ExtractFirstDomain(input string) string {
 }
 
 func (d *Database) UpdateConfig(juid string, lastError string, totalGrupos int) error {
-	_, err := d.Conn.Exec(
-		"UPDATE config SET last_update = $1, last_error = $2, total_grupos = $3 WHERE juid = $4",
-		time.Now(), lastError, totalGrupos, juid,
-	)
-	if err != nil {
-		log.Printf("falha ao atualizar configuração: %v", err)
-		return err
+
+	if totalGrupos == 0 {
+		d.Conn.Exec(
+			"UPDATE config SET last_update = $1, last_error = $2 WHERE juid = $3",
+			time.Now(), lastError, juid)
+	} else {
+		d.Conn.Exec(
+			"UPDATE config SET last_update = $1, last_error = $2, total_grupos = $3 WHERE juid = $4",
+			time.Now(), lastError, totalGrupos, juid,
+		)
 	}
+
 	return nil
 }
 
