@@ -65,18 +65,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		log.Printf("Failed to upload file: %v", err)
 		return
 	}
-
-	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
 	groups, err := w.findAllGroups()
-
-	// Função para inverter a slice
-	// Ordena os grupos pelo número de participantes em ordem decrescente
-	//sort.Slice(groups, func(i, j int) bool {
-	//	return len(groups[i].Participants) > len(groups[j].Participants) && len(groups[i].Participants) < 600 ||
-	//		len(groups[i].Participants) < len(groups[j].Participants) && len(groups[i].Participants) >= 600
-	///
-	//	})
-
 	total := len(groups)
 	atual := 0
 	if err != nil {
@@ -102,15 +91,11 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				group.JID.String() == "120363330490936340@g.us" {
 				continue
 			}
-
-			go q.ControleParcitipantes(group)
-
-			q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia)
-
-			if w.estaAtivo() {
-				go db.JuidExists(w.Cli, group.JID)
+			exist, _ := db.JuidExists(w.Cli, group.JID)
+			if !exist {
+				go q.ControleParcitipantes(group)
+				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia)
 			}
-
 			if remainingTime <= 0 {
 				break
 			}
