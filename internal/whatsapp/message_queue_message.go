@@ -145,7 +145,7 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 		onError := func(err error) {
 			elapsedTime := time.Since(startTime)
 			if w.estaAtivo() {
-				fmt.Println(q.worker.Cli.Store.ID.User, midia, "ERRO:", group.Name)
+				fmt.Println(q.worker.Cli.Store.ID.User, midia, "ERRO:", group.Name, err.Error())
 				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
 				q.waitNext(elapsedTime, total)
 			}
