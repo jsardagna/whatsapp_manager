@@ -93,7 +93,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				continue
 			}
 			startTimeGroup := time.Now()
-			if db.JuidExists(w.Cli, group.JID) && db.VerifyToLeaveGroup(w.Cli, group) && w.estaAtivo() {
+			if !db.JuidExists(w.Cli, group.JID) && db.VerifyToLeaveGroup(w.Cli, group) && w.estaAtivo() {
 				go q.ControleParcitipantes(group)
 				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia, startTimeGroup)
 
