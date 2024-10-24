@@ -74,7 +74,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	} else {
 		w.sending = true
 		startTime := time.Now()
-		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
+		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", total)
 		for _, group := range groups {
 
 			atual++
@@ -164,14 +164,17 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 	}
 }
 
-func (*MessageQueue) waitNext(elapsedTime time.Duration, totalGrupos int) {
-	// Define a duração total para processar todos os grupos (ex: 1 hora = 3600 segundos)
-	totalDuration := time.Hour
+func (q *MessageQueue) waitNext(elapsedTime time.Duration, totalGrupos int) {
+	// Define a duração total para processar todos os grupos, com base no intervalo definido no worker
+	totalDuration := q.worker.Interval - 20*time.Minute
 
 	// Calcula o tempo mínimo entre o processamento de cada grupo
 	minTime := totalDuration / time.Duration(totalGrupos)
-	if elapsedTime < minTime*time.Second {
-		remainingTime := minTime*time.Second - elapsedTime
+
+	// Verifica se o tempo decorrido é menor que o tempo mínimo esperado por grupo
+	if elapsedTime < minTime {
+		remainingTime := minTime - elapsedTime
+		// Pausa o processo pelo tempo restante mais um atraso aleatório de 0 a 2 segundos
 		time.Sleep(remainingTime + time.Duration(rand.Intn(3))*time.Second)
 	}
 }

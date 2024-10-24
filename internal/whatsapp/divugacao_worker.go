@@ -29,6 +29,7 @@ type DivulgacaoWorker struct {
 	queueAll     *MessageQueue
 	sending      bool
 	mu           sync.Mutex
+	Interval     time.Duration
 }
 
 func NewDivulgacaoWorker(m *WhatsAppManager, device *store.Device, db database.Database) *DivulgacaoWorker {
@@ -106,8 +107,9 @@ func (w *DivulgacaoWorker) safeAddMap() {
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {
-	w.queueN = w.NewMessageQueue(90 * time.Minute)
-	w.queueAll = w.NewMessageQueue(90 * time.Minute)
+	w.Interval = 90 * time.Minute
+	w.queueN = w.NewMessageQueue(w.Interval)
+	w.queueAll = w.NewMessageQueue(w.Interval)
 	go w.processStack(w.queueN)
 	go w.processStack(w.queueAll)
 }
