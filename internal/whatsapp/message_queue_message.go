@@ -165,8 +165,8 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 }
 
 func (*MessageQueue) waitNext(elapsedTime time.Duration) {
-	if elapsedTime < 7*time.Second {
-		remainingTime := 7*time.Second - elapsedTime
+	if elapsedTime < 8*time.Second {
+		remainingTime := 8*time.Second - elapsedTime
 		time.Sleep(remainingTime + time.Duration(rand.Intn(3))*time.Second)
 	}
 }
