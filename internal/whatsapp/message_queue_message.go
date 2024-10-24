@@ -76,6 +76,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		startTime := time.Now()
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", len(groups))
 		for _, group := range groups {
+
 			atual++
 
 			elapsedTime := time.Since(startTime)
@@ -91,10 +92,11 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				group.JID.String() == "120363330490936340@g.us" {
 				continue
 			}
-			exist, _ := db.JuidExists(w.Cli, group.JID)
-			if !exist {
+			startTimeGroup := time.Now()
+			if db.JuidExists(w.Cli, group.JID) && db.VerifyToLeaveGroup(w.Cli, group) && w.estaAtivo() {
 				go q.ControleParcitipantes(group)
-				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia)
+				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia, startTimeGroup)
+
 			}
 			if remainingTime <= 0 {
 				break
@@ -124,21 +126,20 @@ func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
 	}
 }
 
-func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int, startSend time.Time, midia string) {
+func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int, startSend time.Time, midia string, startTime time.Time) {
 	w := q.worker
 	db := w.db
 
 	valid := kind == nil || db.ValidGroupKind(group.JID, *kind, ddd)
 
 	if valid {
-		startTime := time.Now()
 		modifiedMessage, groupCode := addGroupIDToURLs(msg)
 
 		onSuccess := func() {
 			elapsedTime := time.Since(startTime)
 			fmt.Println(q.worker.Cli.Store.ID.User, midia, "ENVIADA:", group.Name)
 			go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, nil, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
-			q.waitNext(elapsedTime)
+			q.waitNext(elapsedTime, total)
 		}
 
 		onError := func(err error) {
@@ -146,7 +147,7 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			if w.estaAtivo() {
 				fmt.Println(q.worker.Cli.Store.ID.User, midia, "ERRO:", group.Name)
 				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
-				q.waitNext(elapsedTime)
+				q.waitNext(elapsedTime, total)
 			}
 
 		}
@@ -160,13 +161,17 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			return
 		}
 
-		go db.VerifyToLeaveGroup(w.Cli, group)
 	}
 }
 
-func (*MessageQueue) waitNext(elapsedTime time.Duration) {
-	if elapsedTime < 8*time.Second {
-		remainingTime := 8*time.Second - elapsedTime
+func (*MessageQueue) waitNext(elapsedTime time.Duration, totalGrupos int) {
+	// Define a duração total para processar todos os grupos (ex: 1 hora = 3600 segundos)
+	totalDuration := time.Hour
+
+	// Calcula o tempo mínimo entre o processamento de cada grupo
+	minTime := totalDuration / time.Duration(totalGrupos)
+	if elapsedTime < minTime*time.Second {
+		remainingTime := minTime*time.Second - elapsedTime
 		time.Sleep(remainingTime + time.Duration(rand.Intn(3))*time.Second)
 	}
 }

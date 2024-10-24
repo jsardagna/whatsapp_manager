@@ -106,11 +106,10 @@ func (w *DivulgacaoWorker) safeAddMap() {
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {
-	w.queueN = w.NewMessageQueue(60 * time.Minute)
-	w.queueAll = w.NewMessageQueue(60 * time.Minute)
+	w.queueN = w.NewMessageQueue(90 * time.Minute)
+	w.queueAll = w.NewMessageQueue(90 * time.Minute)
 	go w.processStack(w.queueN)
 	go w.processStack(w.queueAll)
-
 }
 
 func (w *DivulgacaoWorker) findAllGroups() ([]*types.GroupInfo, error) {
