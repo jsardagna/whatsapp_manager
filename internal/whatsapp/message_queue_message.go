@@ -145,10 +145,13 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 			elapsedTime := time.Since(startTime)
 			if w.estaAtivo() {
 				fmt.Println(q.worker.Cli.Store.ID.User, midia, "ERRO:", group.Name, err.Error())
+				str := err.Error()
 				go db.CreateGroup(group.JID, group.Name, groupCode, w.Cli.Store.ID.User, msg, err, elapsedTime.Seconds(), len(group.Participants), atual, total, startSend)
 				q.waitNext(elapsedTime, total)
+				if str == "server returned error 420" || str == "server returned error 401" {
+					w.Cli.LeaveGroup(group.JID)
+				}
 			}
-
 		}
 		if midia == "video" {
 			w.sendVideo(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
