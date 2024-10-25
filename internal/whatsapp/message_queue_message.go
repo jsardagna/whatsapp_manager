@@ -165,7 +165,7 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 
 func (q *MessageQueue) waitNext(elapsedTime time.Duration, totalGrupos int) {
 	// Define a duração total para processar todos os grupos, com base no intervalo definido no worker
-	totalDuration := q.worker.Interval - 20*time.Minute
+	totalDuration := q.worker.Interval - 30*time.Minute
 
 	// Calcula o tempo mínimo entre o processamento de cada grupo
 	minTime := totalDuration / time.Duration(totalGrupos)
