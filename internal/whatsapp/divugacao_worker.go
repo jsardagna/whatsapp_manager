@@ -27,7 +27,6 @@ type DivulgacaoWorker struct {
 	Connected    bool
 	queueN       *MessageQueue
 	queueAll     *MessageQueue
-	sending      bool
 	mu           sync.Mutex
 	Interval     time.Duration
 }

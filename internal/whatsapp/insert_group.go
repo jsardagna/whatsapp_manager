@@ -55,7 +55,7 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 	totalGrupos := 0
 	total := 0
 	for {
-		if !w.estaAtivo() || w.sending {
+		if !w.estaAtivo() {
 			time.Sleep(time.Duration(5 * time.Second))
 			return
 		}

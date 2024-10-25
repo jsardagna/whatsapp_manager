@@ -72,7 +72,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		fmt.Println("FALHA AO BUSCAR GRUPOS: ", q.worker.Cli.Store.ID.User, err.Error())
 		db.UpdateConfig(w.Cli.Store.ID.User, err.Error(), 0)
 	} else {
-		w.sending = true
+
 		startTime := time.Now()
 		db.UpdateConfig(w.Cli.Store.ID.User, "ENVIO", total)
 		for _, group := range groups {
@@ -102,7 +102,6 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 				break
 			}
 		}
-		w.sending = false
 	}
 
 }
