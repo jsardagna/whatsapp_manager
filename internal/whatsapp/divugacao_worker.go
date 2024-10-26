@@ -106,7 +106,7 @@ func (w *DivulgacaoWorker) safeAddMap() {
 }
 
 func (w *DivulgacaoWorker) inicializaFila() {
-	w.Interval = 80 * time.Minute
+	w.Interval = 90 * time.Minute
 	w.queueN = w.NewMessageQueue(w.Interval)
 	w.queueAll = w.NewMessageQueue(w.Interval)
 	go w.processStack(w.queueN)
