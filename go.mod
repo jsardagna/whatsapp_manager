@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 	github.com/mdp/qrterminal/v3 v3.2.0
-	go.mau.fi/whatsmeow v0.0.0-20241019130619-e66372b56ef1
+	go.mau.fi/whatsmeow v0.0.0-20241027175758-cd900353e4a7
 	google.golang.org/protobuf v1.35.1
 )
 
