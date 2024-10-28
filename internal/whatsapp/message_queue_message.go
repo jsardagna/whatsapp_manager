@@ -109,7 +109,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			}
 			startTimeGroup := time.Now()
 			if !db.JuidExists(w.Cli, group.JID) && db.VerifyToLeaveGroup(w.Cli, group) && w.estaAtivo() {
-				q.removeLidParticipants(group)
+				//q.removeLidParticipants(group)
 				go q.ControleParcitipantes(group)
 				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia, startTimeGroup)
 
@@ -121,7 +121,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	}
 
 }
-func (q *MessageQueue) removeLidParticipants(group *types.GroupInfo) {
+func (q *MessageQueue) RemoveLidParticipants(group *types.GroupInfo) {
 	for j := len(group.Participants) - 1; j >= 0; j-- {
 		if strings.HasSuffix(group.Participants[j].JID.String(), "@lid") {
 			group.Participants = append(group.Participants[:j], group.Participants[j+1:]...)
