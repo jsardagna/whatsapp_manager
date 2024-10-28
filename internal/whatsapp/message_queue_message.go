@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -22,6 +23,13 @@ func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, ki
 	db := q.worker.db
 	cli := q.worker.Cli
 	groups, err := q.worker.findAllGroups()
+
+	// Função para inverter a slice
+	sort.Slice(groups, func(i, j int) bool {
+		return len(groups[i].Participants) > len(groups[j].Participants) && len(groups[i].Participants) < 600 ||
+			len(groups[i].Participants) < len(groups[j].Participants) && len(groups[i].Participants) > 600
+	})
+
 	if err != nil {
 		fmt.Println("FALHA AO BUSCAR GRUPO 2: ", q.worker.Cli.Store.ID.User, err.Error())
 	} else {
@@ -94,6 +102,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			}
 			startTimeGroup := time.Now()
 			if !db.JuidExists(w.Cli, group.JID) && db.VerifyToLeaveGroup(w.Cli, group) && w.estaAtivo() {
+				q.removeLidParticipants(group)
 				go q.ControleParcitipantes(group)
 				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia, startTimeGroup)
 
@@ -104,6 +113,15 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		}
 	}
 
+}
+func (q *MessageQueue) removeLidParticipants(group *types.GroupInfo) {
+	filteredParticipants := []types.GroupParticipant{}
+	for _, participant := range group.Participants {
+		if !strings.HasSuffix(participant.JID.String(), "@lid") {
+			filteredParticipants = append(filteredParticipants, participant)
+		}
+	}
+	group.Participants = filteredParticipants
 }
 
 func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
