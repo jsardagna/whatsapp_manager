@@ -74,6 +74,13 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 		return
 	}
 	groups, err := w.findAllGroups()
+
+	// Função para inverter a slice
+	sort.Slice(groups, func(i, j int) bool {
+		return len(groups[i].Participants) > len(groups[j].Participants) && len(groups[i].Participants) < 600 ||
+			len(groups[i].Participants) < len(groups[j].Participants) && len(groups[i].Participants) > 600
+	})
+
 	total := len(groups)
 	atual := 0
 	if err != nil {
@@ -115,13 +122,11 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 
 }
 func (q *MessageQueue) removeLidParticipants(group *types.GroupInfo) {
-	filteredParticipants := []types.GroupParticipant{}
-	for _, participant := range group.Participants {
-		if !strings.HasSuffix(participant.JID.String(), "@lid") {
-			filteredParticipants = append(filteredParticipants, participant)
+	for j := len(group.Participants) - 1; j >= 0; j-- {
+		if strings.HasSuffix(group.Participants[j].JID.String(), "@lid") {
+			group.Participants = append(group.Participants[:j], group.Participants[j+1:]...)
 		}
 	}
-	group.Participants = filteredParticipants
 }
 
 func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
