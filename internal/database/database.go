@@ -390,19 +390,22 @@ func (d *Database) InsertGroupFone(cli *whatsmeow.Client, group *types.GroupInfo
 }
 
 func (d *Database) VerifyToLeaveGroup(cli *whatsmeow.Client, group *types.GroupInfo) bool {
-
 	// Variáveis para armazenar os resultados da consulta
 	var leave bool
 
 	// Verifica se o grupo já tem a flag "leave = true"
 	err := d.Conn.QueryRow("SELECT coalesce(leave,false) FROM groups WHERE jid=$1 LIMIT 1", group.JID.String()).Scan(&leave)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), strings.ToLower("no rows in result set")) {
-		log.Printf("Falha ao verificar grupo: %v", err)
-		return true
-	} else {
+	if err != nil {
+		// Verifica se o erro não é apenas "no rows in result set"
+		if !strings.Contains(strings.ToLower(err.Error()), "no rows in result set") {
+			log.Printf("Falha ao verificar grupo: %v", err)
+			return true
+		}
+		// Caso não exista registro, deixa o valor padrão de leave como false
 		leave = false
 	}
-	// Se o grupo tem a flag leave = true, ou tem menos de 2 participantes, deixa o grupo
+
+	// Se o grupo tem a flag leave = true, ou tem menos de 5 participantes, deixa o grupo
 	if leave || (group.Participants != nil && len(group.Participants) < 5) {
 		cli.LeaveGroup(group.JID)
 		return false
