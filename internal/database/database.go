@@ -140,7 +140,7 @@ func (d *Database) ValidGroupKind(juid types.JID, category []string, ddd *[]stri
 
 func (d *Database) ValidGroupForbidden(juid types.JID) bool {
 	var exists bool
-	sql := "SELECT EXISTS (SELECT 1 FROM groups WHERE jid = $1 and (forbidden is true or category IN ('PUTARIA')))"
+	sql := "SELECT EXISTS (SELECT 1 FROM groups WHERE jid = $1 and forbidden is true)"
 	err := d.Conn.QueryRow(sql,
 		juid.String()).Scan(&exists)
 	if err != nil {
