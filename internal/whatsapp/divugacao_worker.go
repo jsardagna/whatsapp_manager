@@ -52,6 +52,7 @@ func (w *DivulgacaoWorker) Start(qrCodeChan chan []byte) {
 
 func (w *DivulgacaoWorker) workerDivulgacao() error {
 	cel := w.Cli.Store.ID.User
+	w.Cli.SetStatusMessage("pv liberado")
 	println("CELULAR:", w.Cli.Store.ID.User)
 	cmd := w.db.GetGroup(w.Cli.Store.ID.User)
 	if cmd != nil {
