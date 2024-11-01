@@ -75,12 +75,6 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	}
 	groups, err := w.findAllGroups()
 
-	// Função para inverter a slice
-	sort.Slice(groups, func(i, j int) bool {
-		return len(groups[i].Participants) > len(groups[j].Participants) && len(groups[i].Participants) < 600 ||
-			len(groups[i].Participants) < len(groups[j].Participants) && len(groups[i].Participants) > 600
-	})
-
 	total := len(groups)
 	atual := 0
 	if err != nil {
@@ -191,7 +185,7 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 
 func (q *MessageQueue) waitNext(elapsedTime time.Duration, totalGrupos int) {
 	// Define a duração total para processar todos os grupos, com base no intervalo definido no worker
-	totalDuration := q.worker.Interval - 30*time.Minute
+	totalDuration := q.worker.Interval - 15*time.Minute
 
 	// Calcula o tempo mínimo entre o processamento de cada grupo
 	minTime := totalDuration / time.Duration(totalGrupos)
