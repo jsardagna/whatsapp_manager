@@ -62,6 +62,8 @@ func (w *DivulgacaoWorker) workerDivulgacao() error {
 			w.cmdGroupJUID = "120363149950387591@g.us"
 		} else if *cmd == "https://chat.whatsapp.com/EOxBEqcfpRq8fZ0KnYGwHp" {
 			w.cmdGroupJUID = "120363330490936340@g.us"
+		} else if *cmd == "ESQUENTAR" {
+			println("ESQUENTANDO", cel)
 		} else {
 			group, err := w.Cli.GetGroupInfoFromLink(*cmd)
 			if err != nil { //caso de erro
