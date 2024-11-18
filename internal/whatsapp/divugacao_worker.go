@@ -439,3 +439,10 @@ func (w *DivulgacaoWorker) sendImage(recipient types.JID, uploaded whatsmeow.Upl
 
 	return w.internMessage(recipient, msg, onSuccess, onError)
 }
+
+func (w *DivulgacaoWorker) sendLink(recipient types.JID, link *waE2E.ExtendedTextMessage, onSuccess func(), onError func(error)) bool {
+
+	newmsg := &waE2E.Message{ExtendedTextMessage: link}
+
+	return w.internMessage(recipient, newmsg, onSuccess, onError)
+}

@@ -463,7 +463,7 @@ func (d *Database) GetActiveDevicesInfo() ([]DeviceInfo, error) {
 		FROM config
 		WHERE active = true 
 		 and server = true
-		ORDER BY juid
+		ORDER BY local
 	`)
 
 	if err != nil {

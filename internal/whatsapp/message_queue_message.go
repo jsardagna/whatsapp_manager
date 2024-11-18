@@ -1,12 +1,10 @@
 package whatsapp
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"math/rand"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -16,62 +14,18 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
-func (q *MessageQueue) sendAllMessagesLink(ignore string, msg *waE2E.Message, kind *[]string, ddd *[]string) {
-	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
-
-	newmsg := &waE2E.Message{ExtendedTextMessage: msg.ExtendedTextMessage}
-	db := q.worker.db
-	cli := q.worker.Cli
-	groups, err := q.worker.findAllGroups()
-
-	// Função para inverter a slice
-	sort.Slice(groups, func(i, j int) bool {
-		return len(groups[i].Participants) > len(groups[j].Participants) && len(groups[i].Participants) < 600 ||
-			len(groups[i].Participants) < len(groups[j].Participants) && len(groups[i].Participants) > 600
-	})
-
-	if err != nil {
-		fmt.Println("FALHA AO BUSCAR GRUPO 2: ", q.worker.Cli.Store.ID.User, err.Error())
-	} else {
-		for _, group := range groups {
-
-			if group.JID.String() == ignore ||
-				group.JID.String() == "120363149950387591@g.us" ||
-				group.JID.String() == "120363343818835998@g.us" ||
-				group.JID.String() == "120363330490936340@g.us" {
-				continue
-			}
-
-			valid := kind == nil && db.ValidGroupForbidden(group.JID) || kind != nil && db.ValidGroupKind(group.JID, *kind, ddd)
-			if valid {
-				cctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-				resp := make(chan whatsmeow.SendResponse)
-				var r whatsmeow.SendResponse
-
-				go func() {
-					r, _ = cli.SendMessage(cctx, group.JID, newmsg)
-					resp <- r
-				}()
-				select {
-				case <-resp:
-					fmt.Println("LINK ENVIADO ", q.worker.Cli.Store.ID.User, " GRUPO:", group.Name)
-
-				case <-cctx.Done():
-					fmt.Println(cctx.Err())
-				}
-			}
-		}
-	}
-}
-
-func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, kind *[]string, ddd *[]string, midia string) {
+func (q *MessageQueue) sendAllMessages(ignore string, msg string, kind *[]string, ddd *[]string, midia string, data []byte, link *waE2E.ExtendedTextMessage) {
 	w := q.worker
 	db := w.db
 	// envia imagem para servidor
-	uploaded, err := w.uploadImage(data)
-	if err != nil {
-		log.Printf("Failed to upload file: %v", err)
-		return
+	var uploaded whatsmeow.UploadResponse
+	if midia == "image" || midia == "video" {
+		var err2 error
+		uploaded, err2 = w.uploadImage(data)
+		if err2 != nil {
+			log.Printf("Failed to upload file: %v", err2)
+			return
+		}
 	}
 	groups, err := w.findAllGroups()
 
@@ -105,8 +59,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 			valid := kind == nil && db.ValidGroupForbidden(group.JID) || kind != nil && db.ValidGroupKind(group.JID, *kind, ddd)
 			if valid && !db.JuidExists(w.Cli, group.JID) && db.VerifyToLeaveGroup(w.Cli, group) && w.estaAtivo() {
 				go q.ControleParcitipantes(group)
-				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia, startTimeGroup)
-
+				q.sendMessage(kind, group, uploaded, data, msg, ddd, atual, total, startTime, midia, startTimeGroup, link)
 			}
 			if remainingTime <= 0 {
 				break
@@ -115,6 +68,7 @@ func (q *MessageQueue) sendAllMessages(ignore string, data []byte, msg string, k
 	}
 
 }
+
 func (q *MessageQueue) RemoveLidParticipants(group *types.GroupInfo) {
 	for j := len(group.Participants) - 1; j >= 0; j-- {
 		if strings.HasSuffix(group.Participants[j].JID.String(), "@lid") {
@@ -142,7 +96,7 @@ func (q *MessageQueue) ControleParcitipantes(group *types.GroupInfo) {
 	}
 }
 
-func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int, startSend time.Time, midia string, startTime time.Time) {
+func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploaded whatsmeow.UploadResponse, data []byte, msg string, ddd *[]string, atual int, total int, startSend time.Time, midia string, startTime time.Time, link *waE2E.ExtendedTextMessage) {
 	w := q.worker
 	db := w.db
 
@@ -172,10 +126,11 @@ func (q *MessageQueue) sendMessage(kind *[]string, group *types.GroupInfo, uploa
 		}
 		if midia == "video" {
 			w.sendVideo(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
-		} else {
+		} else if midia == "image" {
 			w.sendImage(group.JID, uploaded, data, modifiedMessage, onSuccess, onError)
+		} else {
+			w.sendLink(group.JID, link, onSuccess, onError)
 		}
-
 		if !w.estaAtivo() {
 			return
 		}

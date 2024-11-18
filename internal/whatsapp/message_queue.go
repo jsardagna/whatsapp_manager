@@ -77,10 +77,19 @@ func (w *DivulgacaoWorker) processStack(queue *MessageQueue) {
 							LogErrorToFile(r)
 						}
 					}()
-					go queue.sendAllMessages(request.ignore, *request.data, *request.text, request.kind, request.ddd, request.tipo)
+					go queue.sendAllMessages(request.ignore, *request.text, request.kind, request.ddd, request.tipo, *request.data, nil)
 				}()
 			} else if request.tipo == "link" {
-				go queue.sendAllMessagesLink(request.ignore, request.message, request.kind, request.ddd)
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							fmt.Printf("Recuperado de um panic: %v\n", r)
+							fmt.Printf("Stack Trace:\n%s\n", debug.Stack())
+							LogErrorToFile(r)
+						}
+					}()
+					go queue.sendAllMessages(request.ignore, "", request.kind, request.ddd, request.tipo, nil, request.message.ExtendedTextMessage)
+				}()
 			}
 			time.Sleep(time.Duration(queue.intervalo))
 		} else {
