@@ -44,6 +44,8 @@ go.mau.fi/util v0.8.1 h1:Ga43cz6esQBYqcjZ/onRoVnYWoUwjWbsxVeJg2jOTSo=
 go.mau.fi/util v0.8.1/go.mod h1:T1u/rD2rzidVrBLyaUdPpZiJdP/rsyi+aTzn0D+Q6wc=
 go.mau.fi/util v0.8.2-0.20241113135441-636f8643f367 h1:GU0TYiAOU79p6r3jf3e4k5cdgnPxOcJWkWeWampdAjw=
 go.mau.fi/util v0.8.2-0.20241113135441-636f8643f367/go.mod h1:SVzC++wSl8Yq4YVQRClLPa1frNpSVDVP6mfkw/OvDbc=
+go.mau.fi/util v0.8.2 h1:zWbVHwdRKwI6U9AusmZ8bwgcLosikwbb4GGqLrNr1YE=
+go.mau.fi/util v0.8.2/go.mod h1:BHHC9R2WLMJd1bwTZfTcFxUgRFmUgUmiWcT4RbzUgiA=
 go.mau.fi/whatsmeow v0.0.0-20240917093958-061c065cc1ee h1:wP8wJwD9lRqEeWQsWg9z6dnW5FKMi6rU7hJO+BEfaa0=
 go.mau.fi/whatsmeow v0.0.0-20240917093958-061c065cc1ee/go.mod h1:BhHKalSq0qNtSCuGIUIvoJyU5KbT4a7k8DQ5yw1Ssk4=
 go.mau.fi/whatsmeow v0.0.0-20241001150013-71e7937b706a h1:6f0HGXBZiGrQMrI8MF5u0zjrdsBXLzWAneikUOhbN3E=
@@ -64,6 +66,8 @@ go.mau.fi/whatsmeow v0.0.0-20241106153717-65ee2390b147 h1:IWKH0NL34DlR3P10yL6hNp
 go.mau.fi/whatsmeow v0.0.0-20241106153717-65ee2390b147/go.mod h1:UvaXcdb8y5Mryj2LSXAMw7u4/exnWJIXn8Gvpmf6ndI=
 go.mau.fi/whatsmeow v0.0.0-20241114122515-3c0f25d54c22 h1:MqyzS+gnDLTGfbmQvmzbe7ZcsyEgkw2WDTWaC3AVnOo=
 go.mau.fi/whatsmeow v0.0.0-20241114122515-3c0f25d54c22/go.mod h1:TsBdbxqTsOTiKXj2M/ipWWFGKebU+WcipK4LZnHfEJ4=
+go.mau.fi/whatsmeow v0.0.0-20241116141054-92458da42ba3 h1:5BTCMPMvWcEJ+BIvci8S2+yqe09XIRqRYPt4SgB9y5o=
+go.mau.fi/whatsmeow v0.0.0-20241116141054-92458da42ba3/go.mod h1:iB+F/NVNOnyumU2p/TKTSSdBhH05GHFG36diYuFp9VQ=
 golang.org/x/crypto v0.25.0 h1:ypSNr+bnYL2YhwoMt2zPxHFmbAN1KZs/njMG3hxUp30=
 golang.org/x/crypto v0.25.0/go.mod h1:T+wALwcMOSE0kXgUAnPAHqTLW+XHgcELELW8VaDgm/M=
 golang.org/x/crypto v0.27.0 h1:GXm2NjJrPaiv/h1tb2UH8QfgC/hOf/+z0p6PT8o1w7A=
