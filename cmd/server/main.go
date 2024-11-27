@@ -27,6 +27,8 @@ func init() {
 
 func main() {
 
+	log.Println("Iniciando serviço...")
+
 	// Captura o panic e registra no arquivo de log
 	defer func() {
 		if r := recover(); r != nil {
