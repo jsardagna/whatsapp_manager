@@ -192,7 +192,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 		// Se o dispositivo não existir no mapa, ele está inativo
 		if !exists {
 			total++
-			inativosString += fmt.Sprintf("```%s - %s```\n", activeDevice.Local, activeDevice.JUID)
+			inativosString += fmt.Sprintf("%s - %s\n", activeDevice.Local, activeDevice.JUID)
 			continue
 		}
 
@@ -206,7 +206,7 @@ func (m *WhatsAppManager) ListarDivulgadoresInativos() string {
 
 	// Caso nenhum divulgador inativo seja encontrado
 	if inativosString != "" {
-		return fmt.Sprintf("TOTAL INATIVOS: %d\n```-------------------```\n%s```-------------------```", total, inativosString)
+		return fmt.Sprintf("TOTAL INATIVOS: %d\n```-------------------\n%s-------------------```", total, inativosString)
 	}
 	return "Nenhum divulgador inativo encontrado."
 }
