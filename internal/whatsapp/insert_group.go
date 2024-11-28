@@ -92,10 +92,9 @@ func (w *DivulgacaoWorker) insertNewGroups() {
 			if err != nil {
 				log.Printf("erro ao atualizar grupo erro: %v", err)
 			}
-			println("FAZENDO COMMIT.. ", w.Cli.Store.ID.String(), " N", total, ": ", group.Name)
-			w.db.UpdateConfig(w.Cli.Store.ID.User, "", totalGrupos+total)
-			println("FOI COMMIT.. ", w.Cli.Store.ID.String(), " N", total, ": ", group.Name)
 			err = tx.Commit()
+			w.db.UpdateConfig(w.Cli.Store.ID.User, "", totalGrupos+total)
+
 			if err == nil {
 				time.Sleep(time.Duration(MapExponential(totalGrupos)+rand.Intn(5)) * time.Second)
 			}
