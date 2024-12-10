@@ -100,20 +100,14 @@ func (d *Database) getCmdGroupJUID(juid string) (string, error) {
 }
 
 func (d *Database) JuidExists(cli *whatsmeow.Client, juid types.JID) bool {
-	var exists bool
-	err := d.Conn.QueryRow(`
-		SELECT EXISTS (SELECT 1 FROM groups_on WHERE juid = $1 AND date > current_timestamp - interval '30 minutes');
-	`, juid.String()).Scan(&exists)
-	if err != nil {
-		return false
+
+	duplicado, err := d.AnotherSend(juid, cli.Store.ID.User)
+	if err == nil && duplicado {
+		cli.LeaveGroup(juid)
+		return true
 	}
-	if exists {
-		duplicado, err := d.AnotherSend(juid, cli.Store.ID.User)
-		if err == nil && duplicado {
-			cli.LeaveGroup(juid)
-		}
-	}
-	return exists
+	return false
+
 }
 
 func (d *Database) ValidGroupKind(juid types.JID, category []string, ddd *[]string) bool {
