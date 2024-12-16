@@ -165,6 +165,8 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 				} else if w.nextmessage && evt.Message.ExtendedTextMessage != nil && evt.Message.ExtendedTextMessage.MatchedText != nil &&
 					(strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://www.instagram.com/") ||
 						strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://x.com/") ||
+						strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://x.com/") ||
+						strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://2ly.link/") ||
 						strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://desejocasual.com/") ||
 						strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://twitter.com/") ||
 						strings.HasPrefix(*evt.Message.ExtendedTextMessage.MatchedText, "https://youtu.be/")) {
