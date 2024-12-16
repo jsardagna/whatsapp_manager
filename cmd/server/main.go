@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"syscall"
 	"time"
+	"whatsapp-manager/internal/config"
 	"whatsapp-manager/internal/database"
 	"whatsapp-manager/internal/whatsapp"
 
@@ -49,9 +50,9 @@ func main() {
 	}
 	defer statusDB.CloneConnection()
 
-	//grupoComando := config.GetEnv("COMANDOS", "")
+	grupoComando := config.GetEnv("COMANDOS", "")
 
-	//deviceComando := config.GetEnv("DEVICE_COMMANDO", "")
+	deviceComando := config.GetEnv("DEVICE_COMMANDO", "")
 
 	// Inicializar gerenciador de WhatsApp
 	manager := whatsapp.NewWhatsAppManager(*statusDB)
@@ -62,13 +63,13 @@ func main() {
 	}
 	defer store.Close()
 
-	//manager.StartComando(grupoComando, deviceComando)
+	manager.StartComando(grupoComando, deviceComando)
 	if err != nil {
 		log.Fatalf("Erro ao Iniclicar comandos: %v", err)
 	}
 
 	// Iniciar o gerenciamento de dispositivos
-	err = manager.StartAllDevices()
+	//err = manager.StartAllDevices()
 	if err != nil {
 		log.Fatalf("Erro ao conectar divulgadores: %v", err)
 	}
