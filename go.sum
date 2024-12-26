@@ -34,6 +34,7 @@ github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e h1:MRM5ITcdelLK2j1
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 go.mau.fi/libsignal v0.1.1 h1:m/0PGBh4QKP/I1MQ44ti4C0fMbLMuHb95cmDw01FIpI=
 go.mau.fi/libsignal v0.1.1/go.mod h1:QLs89F/OA3ThdSL2Wz2p+o+fi8uuQUz0e1BRa6ExdBw=
 go.mau.fi/util v0.6.0 h1:W6SyB3Bm/GjenQ5iq8Z8WWdN85Gy2xS6L0wmnR7SVjg=
@@ -46,6 +47,8 @@ go.mau.fi/util v0.8.2-0.20241113135441-636f8643f367 h1:GU0TYiAOU79p6r3jf3e4k5cdg
 go.mau.fi/util v0.8.2-0.20241113135441-636f8643f367/go.mod h1:SVzC++wSl8Yq4YVQRClLPa1frNpSVDVP6mfkw/OvDbc=
 go.mau.fi/util v0.8.2 h1:zWbVHwdRKwI6U9AusmZ8bwgcLosikwbb4GGqLrNr1YE=
 go.mau.fi/util v0.8.2/go.mod h1:BHHC9R2WLMJd1bwTZfTcFxUgRFmUgUmiWcT4RbzUgiA=
+go.mau.fi/util v0.8.3 h1:sulhXtfquMrQjsOP67x9CzWVBYUwhYeoo8hNQIpCWZ4=
+go.mau.fi/util v0.8.3/go.mod h1:c00Db8xog70JeIsEvhdHooylTkTkakgnAOsZ04hplQY=
 go.mau.fi/whatsmeow v0.0.0-20240917093958-061c065cc1ee h1:wP8wJwD9lRqEeWQsWg9z6dnW5FKMi6rU7hJO+BEfaa0=
 go.mau.fi/whatsmeow v0.0.0-20240917093958-061c065cc1ee/go.mod h1:BhHKalSq0qNtSCuGIUIvoJyU5KbT4a7k8DQ5yw1Ssk4=
 go.mau.fi/whatsmeow v0.0.0-20241001150013-71e7937b706a h1:6f0HGXBZiGrQMrI8MF5u0zjrdsBXLzWAneikUOhbN3E=
@@ -72,6 +75,8 @@ go.mau.fi/whatsmeow v0.0.0-20241121132808-ae900cb6bee4 h1:fb3X+Us6dDmXWZJt7H9o9P
 go.mau.fi/whatsmeow v0.0.0-20241121132808-ae900cb6bee4/go.mod h1:iB+F/NVNOnyumU2p/TKTSSdBhH05GHFG36diYuFp9VQ=
 go.mau.fi/whatsmeow v0.0.0-20241202173457-b2dd543e5721 h1:NveCzJ+3fTWBNnHg5+0iVqjdPdFmCTw9MDY1yELUDx4=
 go.mau.fi/whatsmeow v0.0.0-20241202173457-b2dd543e5721/go.mod h1:iB+F/NVNOnyumU2p/TKTSSdBhH05GHFG36diYuFp9VQ=
+go.mau.fi/whatsmeow v0.0.0-20241215104421-68b0856cce22 h1:0jqmWhJeVvCnIFcMqETqqHwmlgPSDZKYbeLPhCqeHE0=
+go.mau.fi/whatsmeow v0.0.0-20241215104421-68b0856cce22/go.mod h1:56ExppHW+lqAZA4AGmCg0+qHrP5TZuIN8oiubTULSVA=
 golang.org/x/crypto v0.25.0 h1:ypSNr+bnYL2YhwoMt2zPxHFmbAN1KZs/njMG3hxUp30=
 golang.org/x/crypto v0.25.0/go.mod h1:T+wALwcMOSE0kXgUAnPAHqTLW+XHgcELELW8VaDgm/M=
 golang.org/x/crypto v0.27.0 h1:GXm2NjJrPaiv/h1tb2UH8QfgC/hOf/+z0p6PT8o1w7A=
@@ -94,6 +99,8 @@ golang.org/x/net v0.31.0 h1:68CPQngjLL0r2AlUKiSxtQFKvzRVbnzLwMUn5SzcLHo=
 golang.org/x/net v0.31.0/go.mod h1:P4fl1q7dY2hnZFxEk4pPSkDHF+QqjitcnDjUQyMM+pM=
 golang.org/x/net v0.32.0 h1:ZqPmj8Kzc+Y6e0+skZsuACbx+wzMgo5MQsJh9Qd6aYI=
 golang.org/x/net v0.32.0/go.mod h1:CwU0IoeOlnQQWJ6ioyFrfRuomB8GKF6KbYXZVyeXNfs=
+golang.org/x/net v0.33.0 h1:74SYHlV8BIgHIFC/LrYkOGIwL19eTYXQ5wc6TBuO36I=
+golang.org/x/net v0.33.0/go.mod h1:HXLR5J+9DxmrqMwG9qjGCxZ+zKXxBru04zlTvWlWuN4=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.12.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
@@ -125,6 +132,8 @@ google.golang.org/protobuf v1.35.1 h1:m3LfL6/Ca+fqnjnlqQXNpFPABW1UD7mjh8KO2mKFyt
 google.golang.org/protobuf v1.35.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
 google.golang.org/protobuf v1.35.2 h1:8Ar7bF+apOIoThw1EdZl0p1oWvMqTHmpA2fRTyZO8io=
 google.golang.org/protobuf v1.35.2/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
+google.golang.org/protobuf v1.36.1 h1:yBPeRvTftaleIgM3PZ/WBIZ7XM/eEYAaEyCwvyjq/gk=
+google.golang.org/protobuf v1.36.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 rsc.io/qr v0.2.0 h1:6vBLea5/NRMVTz8V66gipeLycZMl/+UlFmk8DvqQ6WY=

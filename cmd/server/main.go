@@ -69,7 +69,7 @@ func main() {
 	}
 
 	// Iniciar o gerenciamento de dispositivos
-	err = manager.StartAllDevices()
+	//err = manager.StartAllDevices()
 	if err != nil {
 		log.Fatalf("Erro ao conectar divulgadores: %v", err)
 	}
