@@ -190,13 +190,14 @@ func (w *DivulgacaoWorker) handleWhatsAppEvents(rawEvt interface{}) {
 					if strings.Contains(cmd, "ENVIAR") {
 						w.nextmessage = true
 						w.kindmessage = cmd
-						total := 0
-						if strings.Contains(cmd, "ENVIAR-") {
-							total = len(w.queueN.stack)
-						} else {
-							total = len(w.queueAll.stack)
-						}
-						w.enviarTexto(cmd, total, evt)
+						/*
+							total := 0
+							if strings.Contains(cmd, "ENVIAR-") {
+								total = len(w.queueN.stack)
+							} else {
+								total = len(w.queueAll.stack)
+							}
+							w.enviarTexto(cmd, total, evt)*/
 						go db.UpdateConfig(w.Cli.Store.ID.User, "PREPARA-ENVIO", 0)
 					}
 				}
